@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../features/splash/splash_screen.dart';
+import '../features/onboarding/onboarding_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -10,11 +11,11 @@ class AppRouter {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       // TODO: Adicionar outras rotas quando as telas forem criadas
-      // GoRoute(
-      //   path: '/onboarding',
-      //   builder: (context, state) => const OnboardingScreen(),
-      // ),
       // GoRoute(
       //   path: '/home',
       //   builder: (context, state) => const HomeScreen(),
