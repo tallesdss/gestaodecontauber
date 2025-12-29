@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
 
 class AppTextField extends StatelessWidget {
   final String? label;
@@ -15,6 +17,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final int? maxLines;
   final VoidCallback? onSuffixTap;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AppTextField({
     super.key,
@@ -29,6 +32,7 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.maxLines = 1,
     this.onSuffixTap,
+    this.inputFormatters,
   });
 
   @override
@@ -50,8 +54,11 @@ class AppTextField extends StatelessWidget {
           keyboardType: keyboardType,
           obscureText: obscureText,
           maxLines: maxLines,
+          inputFormatters: inputFormatters,
           style: AppTypography.bodyLarge,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.surface,
             hintText: hint,
             hintStyle: AppTypography.bodyLarge.copyWith(
               color: AppColors.textTertiary,
@@ -65,6 +72,30 @@ class AppTextField extends StatelessWidget {
                     onPressed: onSuffixTap,
                   )
                 : null,
+            border: const OutlineInputBorder(
+              borderRadius: AppRadius.borderRadiusMD,
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.borderRadiusMD,
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.borderRadiusMD,
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            errorBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.borderRadiusMD,
+              borderSide: BorderSide(color: AppColors.error, width: 2),
+            ),
+            focusedErrorBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.borderRadiusMD,
+              borderSide: BorderSide(color: AppColors.error, width: 2),
+            ),
+            contentPadding: AppSpacing.paddingLG,
+            errorStyle: AppTypography.caption.copyWith(
+              color: AppColors.error,
+            ),
           ),
         ),
       ],
