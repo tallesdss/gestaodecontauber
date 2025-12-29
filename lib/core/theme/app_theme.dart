@@ -33,7 +33,7 @@ class AppTheme {
         labelLarge: AppTypography.labelLarge,
         labelMedium: AppTypography.labelMedium,
       ),
-      cardTheme: CardTheme(
+      cardTheme: const CardTheme(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -48,7 +48,7 @@ class AppTheme {
         titleTextStyle: AppTypography.h3,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      inputDecorationTheme: InputDecorationTheme(
+      inputDecorationTheme: const InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
@@ -61,11 +61,11 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusMD,
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusMD,
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
+          borderSide: BorderSide(color: AppColors.error, width: 2),
         ),
         contentPadding: AppSpacing.paddingLG,
       ),
@@ -74,7 +74,7 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textPrimary,
           padding: AppSpacing.paddingLG,
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadius.borderRadiusMD,
           ),
           textStyle: AppTypography.button,
