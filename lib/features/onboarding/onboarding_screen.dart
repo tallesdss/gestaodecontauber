@@ -57,21 +57,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _completeOnboarding() async {
-    if (_currentPage == 2) {
-      // Validação na última tela
-      if (!_formKey.currentState!.validate()) {
-        return;
-      }
-    }
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.keyOnboardingCompleted, true);
     
     if (_currentPage == 2) {
-      // Salvar dados do motorista
-      await prefs.setString(AppConstants.keyDriverName, _nameController.text.trim());
-      final goal = CurrencyFormatter.parse(_goalController.text);
-      await prefs.setDouble(AppConstants.keyMonthlyGoal, goal);
+      // Salvar dados do motorista (se preenchidos)
+      if (_nameController.text.trim().isNotEmpty) {
+        await prefs.setString(AppConstants.keyDriverName, _nameController.text.trim());
+      }
+      if (_goalController.text.trim().isNotEmpty) {
+        final goal = CurrencyFormatter.parse(_goalController.text);
+        await prefs.setDouble(AppConstants.keyMonthlyGoal, goal);
+      }
     }
 
     if (mounted) {

@@ -2,3 +2,4 @@
 // Este serviço será criado posteriormente para gerenciar
 // SharedPreferences para configurações do usuário
 
+

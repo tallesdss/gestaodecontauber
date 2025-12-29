@@ -152,3 +152,4 @@ Todas as telas foram criadas como placeholders com comentários TODO:
 - O sistema de design está completo e pronto para uso
 - Os modelos de dados estão definidos e prontos para uso
 
+
