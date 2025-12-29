@@ -4,12 +4,12 @@ import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/earnings/add_earning_screen.dart';
+import '../features/expenses/add_expense_screen.dart';
 // Imports comentados - serão descomentados quando as telas forem implementadas
 // import '../features/profile/profile_screen.dart';
 // import '../features/reports/reports_screen.dart';
 // import '../features/earnings/earnings_list_screen.dart';
 // import '../features/expenses/expenses_list_screen.dart';
-// import '../features/expenses/add_expense_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -31,6 +31,10 @@ class AppRouter {
         path: '/earnings/add',
         builder: (context, state) => const AddEarningScreen(),
       ),
+      GoRoute(
+        path: '/expenses/add',
+        builder: (context, state) => const AddExpenseScreen(),
+      ),
       // Rotas comentadas - serão descomentadas quando as telas forem implementadas
       // GoRoute(
       //   path: '/profile',
@@ -47,10 +51,6 @@ class AppRouter {
       // GoRoute(
       //   path: '/expenses',
       //   builder: (context, state) => const ExpensesListScreen(),
-      // ),
-      // GoRoute(
-      //   path: '/expenses/add',
-      //   builder: (context, state) => const AddExpenseScreen(),
       // ),
     ],
     errorBuilder: (context, state) => Scaffold(
