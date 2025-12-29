@@ -108,16 +108,16 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.directions_car,
                         size: 64,
                         color: AppColors.primary,
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
 
                     // Nome do app
                     Text(
@@ -148,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
 
-            SizedBox(height: AppSpacing.xxxl),
+            const SizedBox(height: AppSpacing.xxxl),
 
             // Versão do app (rodapé)
             FadeTransition(
@@ -161,7 +161,7 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
 
-            SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),

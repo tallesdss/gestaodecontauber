@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class AppSpacing {
   // Espaçamentos base
   static const double xs = 4.0;

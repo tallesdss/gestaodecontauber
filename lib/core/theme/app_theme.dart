@@ -33,7 +33,7 @@ class AppTheme {
         labelLarge: AppTypography.labelLarge,
         labelMedium: AppTypography.labelMedium,
       ),
-      cardTheme: const CardTheme(
+      cardTheme: const CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(

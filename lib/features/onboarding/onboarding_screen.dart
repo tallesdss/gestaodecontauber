@@ -30,7 +30,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // Máscara para o campo de meta mensal (formato brasileiro)
   final _goalMaskFormatter = MaskTextInputFormatter(
     mask: 'R\$ #.##0,00',
-    filter: {"#": RegExp(r'[0-9]')},
+    filter: {'#': RegExp(r'[0-9]')},
   );
 
   @override
@@ -127,7 +127,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     size: ButtonSize.large,
                   ),
                   if (_currentPage < 2) ...[
-                    SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.md),
                     TextButton(
                       onPressed: _skipOnboarding,
                       child: Text(
@@ -171,16 +171,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 200,
             height: 200,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
+              color: AppColors.primary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.directions_car,
               size: 100,
               color: AppColors.primary,
             ),
           ),
-          SizedBox(height: AppSpacing.xxxl),
+          const SizedBox(height: AppSpacing.xxxl),
 
           // Título
           Text(
@@ -188,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: AppTypography.h1,
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
 
           // Subtítulo
           Text(
@@ -215,16 +215,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: 150,
             height: 150,
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.2),
+              color: AppColors.accent.withValues(alpha: 0.2),
               borderRadius: AppRadius.borderRadiusXL,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.attach_money,
               size: 80,
               color: AppColors.accent,
             ),
           ),
-          SizedBox(height: AppSpacing.xxxl),
+          const SizedBox(height: AppSpacing.xxxl),
 
           // Título
           Text(
@@ -232,13 +232,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: AppTypography.h2,
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: AppSpacing.xxl),
+          const SizedBox(height: AppSpacing.xxl),
 
           // Lista de recursos
           _buildFeatureItem('Acompanhe ganhos diários'),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           _buildFeatureItem('Registre todas as despesas'),
-          SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.lg),
           _buildFeatureItem('Veja relatórios detalhados'),
         ],
       ),
@@ -248,12 +248,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildFeatureItem(String text) {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.check_circle,
           color: AppColors.primary,
           size: 24,
         ),
-        SizedBox(width: AppSpacing.md),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Text(
             text,
@@ -273,23 +273,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
             
             // Ilustração/Ícone
             Container(
               width: 150,
               height: 150,
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.2),
+                color: AppColors.success.withValues(alpha: 0.2),
                 borderRadius: AppRadius.borderRadiusXL,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.rocket_launch,
                 size: 80,
                 color: AppColors.success,
               ),
             ),
-            SizedBox(height: AppSpacing.xxxl),
+            const SizedBox(height: AppSpacing.xxxl),
 
             // Título
             Text(
@@ -297,7 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               style: AppTypography.h2,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: AppSpacing.xxxl),
+            const SizedBox(height: AppSpacing.xxxl),
 
             // Campo: Nome do motorista
             AppTextField(
@@ -315,7 +315,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 return null;
               },
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
             // Campo: Meta mensal
             Column(
@@ -336,24 +336,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     hintStyle: AppTypography.bodyLarge.copyWith(
                       color: AppColors.textTertiary,
                     ),
-                    prefixIcon: Icon(Icons.flag, color: AppColors.textSecondary),
+                    prefixIcon: const Icon(Icons.flag, color: AppColors.textSecondary),
                     filled: true,
                     fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
+                    border: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
                       borderSide: BorderSide.none,
                     ),
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
                       borderSide: BorderSide.none,
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                      borderSide: BorderSide(color: AppColors.primary, width: 2),
                     ),
-                    errorBorder: OutlineInputBorder(
+                    errorBorder: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: const BorderSide(color: AppColors.error, width: 2),
+                      borderSide: BorderSide(color: AppColors.error, width: 2),
                     ),
                     contentPadding: AppSpacing.paddingLG,
                   ),

@@ -49,7 +49,7 @@ class AppButton extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               padding: AppSpacing.paddingLG,
               minimumSize: Size(width ?? double.infinity, _height),
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                 borderRadius: AppRadius.borderRadiusMD,
               ),
               side: BorderSide(
@@ -66,7 +66,7 @@ class AppButton extends StatelessWidget {
               foregroundColor: textColor ?? AppColors.textPrimary,
               padding: AppSpacing.paddingLG,
               minimumSize: Size(width ?? double.infinity, _height),
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                 borderRadius: AppRadius.borderRadiusMD,
               ),
             ),

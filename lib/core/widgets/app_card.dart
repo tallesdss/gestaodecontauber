@@ -24,7 +24,7 @@ class AppCard extends StatelessWidget {
     final card = Card(
       color: color ?? AppColors.surface,
       elevation: elevation ?? 0,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: AppRadius.borderRadiusLG,
       ),
       margin: EdgeInsets.zero,
