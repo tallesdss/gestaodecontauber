@@ -6,10 +6,11 @@ import '../features/home/home_screen.dart';
 import '../features/earnings/add_earning_screen.dart';
 import '../features/earnings/earnings_list_screen.dart';
 import '../features/expenses/add_expense_screen.dart';
+import '../features/expenses/expenses_list_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/shared/detail_screen.dart';
 // Imports comentados - serão descomentados quando as telas forem implementadas
 // import '../features/reports/reports_screen.dart';
-// import '../features/expenses/expenses_list_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -36,8 +37,34 @@ class AppRouter {
         builder: (context, state) => const AddEarningScreen(),
       ),
       GoRoute(
+        path: '/expenses',
+        builder: (context, state) => const ExpensesListScreen(),
+      ),
+      GoRoute(
         path: '/expenses/add',
         builder: (context, state) => const AddExpenseScreen(),
+      ),
+      GoRoute(
+        path: '/detail/earning/:id',
+        builder: (context, state) {
+          // TODO: Buscar earning pelo ID do estado/banco de dados
+          // Por enquanto, retorna uma tela vazia
+          // final earningId = state.pathParameters['id'] ?? '';
+          return DetailScreen(
+            earning: null, // TODO: Buscar do banco de dados usando earningId
+          );
+        },
+      ),
+      GoRoute(
+        path: '/detail/expense/:id',
+        builder: (context, state) {
+          // TODO: Buscar expense pelo ID do estado/banco de dados
+          // Por enquanto, retorna uma tela vazia
+          // final expenseId = state.pathParameters['id'] ?? '';
+          return DetailScreen(
+            expense: null, // TODO: Buscar do banco de dados usando expenseId
+          );
+        },
       ),
       GoRoute(
         path: '/profile',
@@ -47,10 +74,6 @@ class AppRouter {
       // GoRoute(
       //   path: '/reports',
       //   builder: (context, state) => const ReportsScreen(),
-      // ),
-      // GoRoute(
-      //   path: '/expenses',
-      //   builder: (context, state) => const ExpensesListScreen(),
       // ),
     ],
     errorBuilder: (context, state) => Scaffold(

@@ -11,6 +11,9 @@ import '../../core/widgets/app_card.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../shared/models/driver.dart';
+import '../../shared/models/earning.dart';
+import '../../shared/models/expense.dart';
+import '../shared/detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,33 +37,37 @@ class _HomeScreenState extends State<HomeScreen> {
   final double _todayExpenses = 80.0;
   double get _todayProfit => _todayEarnings - _todayExpenses;
 
-  // Atividades recentes (mock)
-  final List<Map<String, dynamic>> _recentActivities = [
-    {
-      'type': 'earning',
-      'icon': Icons.attach_money,
-      'iconColor': AppColors.earnings,
-      'description': 'Ganho do dia',
-      'date': '14:30',
-      'value': 450.0,
-    },
-    {
-      'type': 'expense',
-      'icon': Icons.local_gas_station,
-      'iconColor': AppColors.fuel,
-      'description': 'Combustível',
-      'date': '12:00',
-      'value': 80.0,
-    },
-    {
-      'type': 'earning',
-      'icon': Icons.attach_money,
-      'iconColor': AppColors.earnings,
-      'description': 'Ganho do dia',
-      'date': '10:15',
-      'value': 320.0,
-    },
-  ];
+  // Atividades recentes (mock) - convertidas para objetos Earning/Expense
+  List<dynamic> get _recentActivities {
+    final now = DateTime.now();
+    return [
+      Earning(
+        id: 'home-1',
+        date: DateTime(now.year, now.month, now.day, 14, 30),
+        value: 450.0,
+        platform: 'Uber',
+        numberOfRides: 15,
+        hoursWorked: 8.0,
+        notes: 'Ganho do dia',
+      ),
+      Expense(
+        id: 'home-2',
+        date: DateTime(now.year, now.month, now.day, 12, 0),
+        category: 'Combustível',
+        value: 80.0,
+        description: 'Gasolina comum',
+        liters: 30.0,
+      ),
+      Earning(
+        id: 'home-3',
+        date: DateTime(now.year, now.month, now.day, 10, 15),
+        value: 320.0,
+        platform: '99',
+        numberOfRides: 12,
+        hoursWorked: 6.5,
+      ),
+    ];
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -404,25 +411,88 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: AppSpacing.lg),
         ..._recentActivities.map((activity) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: TransactionCard(
-              icon: activity['icon'] as IconData,
-              iconColor: activity['iconColor'] as Color,
-              description: activity['description'] as String,
-              date: activity['date'] as String,
-              value: CurrencyFormatter.format(activity['value'] as double),
-              valueColor: activity['type'] == 'earning'
-                  ? AppColors.earnings
-                  : AppColors.expenses,
-              onTap: () {
-                // TODO: Navegar para detalhes
-              },
-            ),
-          );
+          if (activity is Earning) {
+            final earning = activity;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: TransactionCard(
+                icon: Icons.attach_money,
+                iconColor: AppColors.earnings,
+                description: earning.notes ?? 'Ganho do dia',
+                date: DateFormatter.formatTime(earning.date),
+                value: CurrencyFormatter.format(earning.value),
+                valueColor: AppColors.earnings,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailScreen(earning: earning),
+                    ),
+                  );
+                },
+              ),
+            );
+          } else if (activity is Expense) {
+            final expense = activity;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: TransactionCard(
+                icon: _getExpenseIcon(expense),
+                iconColor: _getExpenseColor(expense),
+                description: expense.description,
+                date: DateFormatter.formatTime(expense.date),
+                value: CurrencyFormatter.format(expense.value),
+                valueColor: AppColors.expenses,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailScreen(expense: expense),
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+          return const SizedBox.shrink();
         }),
       ],
     );
+  }
+
+  IconData _getExpenseIcon(Expense expense) {
+    switch (expense.category.toLowerCase()) {
+      case 'combustível':
+      case 'fuel':
+        return Icons.local_gas_station;
+      case 'manutenção':
+      case 'maintenance':
+        return Icons.build;
+      case 'lavagem':
+      case 'car_wash':
+        return Icons.local_car_wash;
+      case 'estacionamento':
+      case 'parking':
+        return Icons.local_parking;
+      case 'pedágio':
+      case 'toll':
+        return Icons.toll;
+      default:
+        return Icons.shopping_cart;
+    }
+  }
+
+  Color _getExpenseColor(Expense expense) {
+    switch (expense.category.toLowerCase()) {
+      case 'combustível':
+      case 'fuel':
+        return AppColors.fuel;
+      case 'manutenção':
+      case 'maintenance':
+        return AppColors.maintenance;
+      default:
+        return AppColors.expenses;
+    }
   }
 
   Widget _buildBottomNav() {
