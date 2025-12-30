@@ -4,11 +4,11 @@ import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/earnings/add_earning_screen.dart';
+import '../features/earnings/earnings_list_screen.dart';
 import '../features/expenses/add_expense_screen.dart';
 import '../features/profile/profile_screen.dart';
 // Imports comentados - serão descomentados quando as telas forem implementadas
 // import '../features/reports/reports_screen.dart';
-// import '../features/earnings/earnings_list_screen.dart';
 // import '../features/expenses/expenses_list_screen.dart';
 
 class AppRouter {
@@ -28,6 +28,10 @@ class AppRouter {
         builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
+        path: '/earnings',
+        builder: (context, state) => const EarningsListScreen(),
+      ),
+      GoRoute(
         path: '/earnings/add',
         builder: (context, state) => const AddEarningScreen(),
       ),
@@ -43,10 +47,6 @@ class AppRouter {
       // GoRoute(
       //   path: '/reports',
       //   builder: (context, state) => const ReportsScreen(),
-      // ),
-      // GoRoute(
-      //   path: '/earnings',
-      //   builder: (context, state) => const EarningsListScreen(),
       // ),
       // GoRoute(
       //   path: '/expenses',
