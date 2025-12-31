@@ -9,8 +9,7 @@ import '../features/expenses/add_expense_screen.dart';
 import '../features/expenses/expenses_list_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shared/detail_screen.dart';
-// Imports comentados - serão descomentados quando as telas forem implementadas
-// import '../features/reports/reports_screen.dart';
+import '../features/reports/reports_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -70,11 +69,10 @@ class AppRouter {
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
       ),
-      // Rotas comentadas - serão descomentadas quando as telas forem implementadas
-      // GoRoute(
-      //   path: '/reports',
-      //   builder: (context, state) => const ReportsScreen(),
-      // ),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportsScreen(),
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
