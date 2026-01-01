@@ -10,6 +10,7 @@ import '../features/expenses/expenses_list_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/shared/detail_screen.dart';
 import '../features/reports/reports_screen.dart';
+import '../features/goals/goals_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -72,6 +73,10 @@ class AppRouter {
       GoRoute(
         path: '/reports',
         builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/goals',
+        builder: (context, state) => const GoalsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
