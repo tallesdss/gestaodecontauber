@@ -9,6 +9,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_top_bar.dart';
 import '../../core/widgets/summary_card.dart';
+import '../../core/widgets/app_dialogs.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -170,7 +171,7 @@ class ProfileScreen extends StatelessWidget {
           title: 'Categorias',
           subtitle: 'Gerenciar categorias de gastos',
           onTap: () {
-            // TODO: Navegar para gerenciar categorias
+            context.push('/categories');
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -180,8 +181,7 @@ class ProfileScreen extends StatelessWidget {
           title: 'Backup',
           subtitle: 'Fazer backup dos dados',
           onTap: () {
-            // TODO: Implementar backup
-            _showSnackBar(context, 'Backup realizado com sucesso!');
+            context.push('/backup');
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -191,8 +191,7 @@ class ProfileScreen extends StatelessWidget {
           title: 'Exportar Dados',
           subtitle: 'Exportar relatórios',
           onTap: () {
-            // TODO: Implementar exportação
-            _showSnackBar(context, 'Dados exportados com sucesso!');
+            context.push('/export');
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -201,14 +200,9 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.palette,
           title: 'Tema',
           subtitle: 'Escuro',
-          trailing: Switch(
-            value: true, // TODO: Implementar controle de tema
-            onChanged: (value) {
-              // TODO: Implementar toggle de tema
-            },
-            activeThumbColor: AppColors.primary,
-          ),
-          onTap: null,
+          onTap: () {
+            context.push('/theme');
+          },
         ),
         const SizedBox(height: AppSpacing.md),
         _buildMenuOption(
@@ -217,7 +211,7 @@ class ProfileScreen extends StatelessWidget {
           title: 'Notificações',
           subtitle: 'Gerenciar notificações',
           onTap: () {
-            // TODO: Navegar para configurações de notificação
+            context.push('/notifications');
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -227,8 +221,7 @@ class ProfileScreen extends StatelessWidget {
           title: 'Ajuda',
           subtitle: 'Central de ajuda',
           onTap: () {
-            // TODO: Mostrar ajuda
-            _showSnackBar(context, 'Central de ajuda em breve!');
+            context.push('/help');
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -312,95 +305,26 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    showDialog(
+    AppConfirmDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusLG,
-        ),
-        title: Text(
-          'Confirmar Saída',
-          style: AppTypography.h4,
-        ),
-        content: Text(
-          'Tem certeza que deseja sair da sua conta?',
-          style: AppTypography.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancelar',
-              style: AppTypography.button.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Implementar logout
-              _showSnackBar(context, 'Logout realizado com sucesso!');
-            },
-            child: Text(
-              'Sair',
-              style: AppTypography.button.copyWith(
-                color: AppColors.error,
-              ),
-            ),
-          ),
-        ],
-      ),
+      title: 'Confirmar Saída',
+      message: 'Tem certeza que deseja sair da sua conta?',
+      confirmText: 'Sair',
+      cancelText: 'Cancelar',
+      confirmColor: AppColors.error,
+      onConfirm: () {
+        // TODO: Implementar logout
+        _showSnackBar(context, 'Logout realizado com sucesso!');
+      },
     );
   }
 
   void _showAboutDialog(BuildContext context) {
-    showDialog(
+    AppAboutDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusLG,
-        ),
-        title: Text(
-          'Sobre o App',
-          style: AppTypography.h4,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'UberControl',
-              style: AppTypography.h5,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Versão 1.0.0',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Aplicativo para gestão financeira de motoristas de aplicativo.',
-              style: AppTypography.bodyMedium,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Fechar',
-              style: AppTypography.button.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
+      appName: 'UberControl',
+      version: '1.0.0',
+      description: 'Aplicativo para gestão financeira de motoristas de aplicativo.',
     );
   }
 

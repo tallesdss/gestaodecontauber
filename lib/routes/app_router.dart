@@ -11,6 +11,12 @@ import '../features/profile/profile_screen.dart';
 import '../features/shared/detail_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/goals/goals_screen.dart';
+import '../features/categories/categories_screen.dart';
+import '../features/backup/backup_screen.dart';
+import '../features/export/export_data_screen.dart';
+import '../features/theme/theme_screen.dart';
+import '../features/notifications/notifications_screen.dart';
+import '../features/help/help_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -77,6 +83,30 @@ class AppRouter {
       GoRoute(
         path: '/goals',
         builder: (context, state) => const GoalsScreen(),
+      ),
+      GoRoute(
+        path: '/categories',
+        builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/backup',
+        builder: (context, state) => const BackupScreen(),
+      ),
+      GoRoute(
+        path: '/export',
+        builder: (context, state) => const ExportDataScreen(),
+      ),
+      GoRoute(
+        path: '/theme',
+        builder: (context, state) => const ThemeScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/help',
+        builder: (context, state) => const HelpScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
