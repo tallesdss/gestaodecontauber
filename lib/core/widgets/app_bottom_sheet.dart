@@ -41,7 +41,7 @@ class AppBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppRadius.radiusXL),
@@ -60,19 +60,19 @@ class AppBottomSheet extends StatelessWidget {
             Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.textTertiary,
                 borderRadius: AppRadius.borderRadiusRound,
               ),
             ),
-            SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
           ],
           if (title != null) ...[
             Text(
               title!,
               style: AppTypography.h3,
             ),
-            SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
           ],
           if (customContent != null)
             customContent!
@@ -100,7 +100,7 @@ class AppBottomSheet extends StatelessWidget {
             Container(
               padding: AppSpacing.paddingMD,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: AppRadius.borderRadiusMD,
               ),
               child: Icon(
@@ -109,7 +109,7 @@ class AppBottomSheet extends StatelessWidget {
                 size: 24,
               ),
             ),
-            SizedBox(width: AppSpacing.lg),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +123,7 @@ class AppBottomSheet extends StatelessWidget {
                         : AppTypography.labelLarge,
                   ),
                   if (option.subtitle != null) ...[
-                    SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       option.subtitle!,
                       style: AppTypography.caption,
@@ -132,7 +132,7 @@ class AppBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right,
               color: AppColors.textTertiary,
             ),

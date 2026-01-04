@@ -114,7 +114,7 @@ class _BackupScreenState extends State<BackupScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       // TODO: Implementar lógica de restauração
       _showSnackBar(context, 'Funcionalidade de restauração em desenvolvimento');
     }
@@ -330,7 +330,7 @@ class _BackupScreenState extends State<BackupScreen> {
       padding: AppSpacing.paddingLG,
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: AppColors.info,
             size: 24,

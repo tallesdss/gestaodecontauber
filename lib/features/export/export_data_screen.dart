@@ -149,7 +149,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       padding: AppSpacing.paddingLG,
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: AppColors.info,
             size: 24,
@@ -185,13 +185,13 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
           const SizedBox(height: AppSpacing.sm),
           Container(
             padding: AppSpacing.paddingLG,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.backgroundDark,
               borderRadius: AppRadius.borderRadiusMD,
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.calendar_today,
                   color: AppColors.textSecondary,
                   size: 20,
@@ -209,7 +209,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                     ),
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.chevron_right,
                   color: AppColors.textTertiary,
                 ),

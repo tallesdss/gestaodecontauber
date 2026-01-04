@@ -16,10 +16,10 @@ class DialogsExamples {
       cancelText: 'Cancelar',
       onConfirm: () {
         // Lógica de exclusão
-        print('Item excluído');
+        // print('Item excluído');
       },
       onCancel: () {
-        print('Cancelado');
+        // print('Cancelado');
       },
     );
   }
@@ -36,7 +36,7 @@ class DialogsExamples {
     ).then((confirmed) {
       if (confirmed == true) {
         // Lógica de exclusão
-        print('Gasto excluído');
+        // print('Gasto excluído');
       }
     });
   }
@@ -50,7 +50,7 @@ class DialogsExamples {
       autoClose: true,
       autoCloseDuration: const Duration(seconds: 2),
       onClose: () {
-        print('Dialog fechado');
+        // print('Dialog fechado');
       },
     );
   }
@@ -76,10 +76,10 @@ class DialogsExamples {
       closeText: 'Fechar',
       onRetry: () {
         // Lógica de retry
-        print('Tentando novamente...');
+        // print('Tentando novamente...');
       },
       onClose: () {
-        print('Fechado');
+        // print('Fechado');
       },
     );
   }
@@ -106,7 +106,7 @@ class DialogsExamples {
           onTap: () {
             Navigator.pop(context);
             // Navegar para detalhes
-            print('Ver detalhes');
+            // print('Ver detalhes');
           },
         ),
         BottomSheetOption(
@@ -115,7 +115,7 @@ class DialogsExamples {
           onTap: () {
             Navigator.pop(context);
             // Navegar para edição
-            print('Editar');
+            // print('Editar');
           },
         ),
         BottomSheetOption(
@@ -124,7 +124,7 @@ class DialogsExamples {
           onTap: () {
             Navigator.pop(context);
             // Duplicar item
-            print('Duplicar');
+            // print('Duplicar');
           },
         ),
         BottomSheetOption(
@@ -155,7 +155,7 @@ class DialogsExamples {
           iconColor: AppColors.info,
           onTap: () {
             Navigator.pop(context);
-            print('Ver detalhes');
+            // print('Ver detalhes');
           },
         ),
         BottomSheetOption(
@@ -165,7 +165,7 @@ class DialogsExamples {
           iconColor: AppColors.primary,
           onTap: () {
             Navigator.pop(context);
-            print('Editar');
+            // print('Editar');
           },
         ),
         BottomSheetOption(
@@ -216,7 +216,7 @@ class DialogsExamples {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),

@@ -64,7 +64,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   ];
 
   // Lista de categorias customizadas (seria carregada do banco de dados)
-  List<Map<String, dynamic>> _customCategories = [];
+  final List<Map<String, dynamic>> _customCategories = [];
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +132,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       padding: AppSpacing.paddingLG,
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: AppColors.info,
             size: 24,
@@ -237,7 +237,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     labelStyle: AppTypography.labelMedium,
                     filled: true,
                     fillColor: AppColors.backgroundDark,
-                    border: OutlineInputBorder(
+                    border: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
                     ),
                   ),
@@ -413,7 +413,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     labelStyle: AppTypography.labelMedium,
                     filled: true,
                     fillColor: AppColors.backgroundDark,
-                    border: OutlineInputBorder(
+                    border: const OutlineInputBorder(
                       borderRadius: AppRadius.borderRadiusMD,
                     ),
                   ),

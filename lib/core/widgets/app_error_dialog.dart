@@ -40,7 +40,7 @@ class AppErrorDialog extends StatelessWidget {
             },
             width: double.infinity,
           ),
-          SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
         ],
         AppButton(
           text: closeText,

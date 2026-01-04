@@ -252,7 +252,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       padding: AppSpacing.paddingLG,
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: AppColors.info,
             size: 24,
@@ -338,13 +338,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             onTap: () => _selectTime(context),
             child: Container(
               padding: AppSpacing.paddingLG,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.backgroundDark,
                 borderRadius: AppRadius.borderRadiusMD,
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.access_time,
                     color: AppColors.textSecondary,
                     size: 20,
@@ -356,7 +356,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       style: AppTypography.bodyMedium,
                     ),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.chevron_right,
                     color: AppColors.textTertiary,
                   ),

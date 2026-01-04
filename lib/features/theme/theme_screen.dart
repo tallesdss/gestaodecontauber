@@ -107,7 +107,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
       padding: AppSpacing.paddingLG,
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             color: AppColors.info,
             size: 24,
@@ -198,7 +198,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
           // Preview de card
           Container(
             padding: AppSpacing.paddingLG,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               borderRadius: AppRadius.borderRadiusMD,
             ),
@@ -242,7 +242,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
           // Preview de botão
           Container(
             padding: AppSpacing.paddingLG,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primary,
               borderRadius: AppRadius.borderRadiusMD,
             ),

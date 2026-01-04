@@ -31,7 +31,7 @@ class AppDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppRadius.borderRadiusLG,
         ),
@@ -54,7 +54,7 @@ class AppDialog extends StatelessWidget {
               Container(
                 padding: AppSpacing.paddingLG,
                 decoration: BoxDecoration(
-                  color: (iconColor ?? AppColors.primary).withOpacity(0.1),
+                  color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -63,7 +63,7 @@ class AppDialog extends StatelessWidget {
                   color: iconColor ?? AppColors.primary,
                 ),
               ),
-              SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.xl),
             ],
             if (title != null) ...[
               Text(
@@ -72,7 +72,7 @@ class AppDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               if (message != null || content != null)
-                SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.md),
             ],
             if (message != null)
               Text(
@@ -84,7 +84,7 @@ class AppDialog extends StatelessWidget {
               ),
             if (content != null) content!,
             if (actions != null && actions!.isNotEmpty) ...[
-              SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: AppSpacing.xxl),
               ...actions!,
             ],
           ],

@@ -165,21 +165,22 @@ class _HelpScreenState extends State<HelpScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha((0.2 * 255).round()),
+            width: 80,
+            height: 80,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0E7490), // Dark teal background
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.help_outline,
-              color: AppColors.primary,
+              color: AppColors.textPrimary,
               size: 48,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Central de Ajuda',
-            style: AppTypography.h3,
+            style: AppTypography.h2,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
@@ -208,12 +209,12 @@ class _HelpScreenState extends State<HelpScreen> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.accent.withAlpha((0.2 * 255).round()),
+              color: AppColors.info.withAlpha((0.2 * 255).round()),
               borderRadius: AppRadius.borderRadiusMD,
             ),
             child: Icon(
               icon,
-              color: AppColors.accent,
+              color: AppColors.info,
               size: 24,
             ),
           ),
@@ -274,7 +275,7 @@ class _HelpScreenState extends State<HelpScreen> {
           ),
           if (isExpanded) ...[
             const SizedBox(height: AppSpacing.md),
-            Divider(color: AppColors.textTertiary),
+            const Divider(color: AppColors.textTertiary),
             const SizedBox(height: AppSpacing.md),
             Text(
               item['answer'] as String,
