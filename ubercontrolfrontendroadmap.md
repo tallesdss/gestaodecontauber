@@ -82,7 +82,7 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 2: TELA DE SPLASH
+## 📱 ETAPA 2: TELA DE SPLASH ✅
 
 ### Componentes
 - [x] Logo do app (centro)
@@ -97,7 +97,7 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 3: ONBOARDING (PRIMEIRA VEZ)
+## 📱 ETAPA 3: ONBOARDING (PRIMEIRA VEZ) ✅
 
 ### 3.1 Tela 1: Bem-vindo
 **Componentes:**
@@ -130,7 +130,7 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 4: TELA HOME (DASHBOARD)
+## 📱 ETAPA 4: TELA HOME (DASHBOARD) ✅
 
 ### 4.1 Header
 **Componentes:**
@@ -273,9 +273,9 @@ parking: Icons.local_parking
 - [x] **Botão Cancelar** (voltar)
 
 ### 5.4 Validações
-- Valor deve ser maior que 0
-- Data não pode ser futura
-- Mostrar erro em vermelho abaixo do campo
+- [x] Valor deve ser maior que 0
+- [x] Data não pode ser futura
+- [x] Mostrar erro em vermelho abaixo do campo
 
 ---
 
@@ -345,10 +345,10 @@ parking: Icons.local_parking
 - [x] **Botão Cancelar** (voltar)
 
 ### 6.4 Validações
-- Categoria deve ser selecionada
-- Valor deve ser maior que 0
-- Data não pode ser futura
-- Descrição não pode estar vazia
+- [x] Categoria deve ser selecionada
+- [x] Valor deve ser maior que 0
+- [x] Data não pode ser futura
+- [x] Descrição não pode estar vazia
 
 ---
 
@@ -387,8 +387,8 @@ parking: Icons.local_parking
   - Excluir
 
 **Agrupamento:**
-- Agrupar por data
-- Mostrar total do dia em cada grupo
+- [x] Agrupar por data
+- [x] Mostrar total do dia em cada grupo
 
 ### 7.5 Empty State
 **Se não houver ganhos:**
@@ -449,8 +449,8 @@ parking: Icons.local_parking
   - Excluir
 
 **Agrupamento:**
-- Agrupar por data
-- Mostrar total do dia
+- [x] Agrupar por data
+- [x] Mostrar total do dia
 
 ### 8.6 Empty State
 **Se não houver gastos:**
@@ -1088,7 +1088,7 @@ parking: Icons.local_parking
 
 ### 18.6 Listas
 
-**EmptyState**
+**EmptyState** ✅
 ```dart
 - Ilustração
 - Título
@@ -1107,6 +1107,24 @@ parking: Icons.local_parking
 - Ícone de erro
 - Mensagem
 - Botão "Tentar novamente"
+```
+
+---
+
+## 📱 ETAPA 18.7: UTILITÁRIOS ✅
+
+**CurrencyFormatter** ✅
+```dart
+- Formatação de valores monetários (R$)
+- Suporte a diferentes moedas
+- Máscara de entrada
+```
+
+**DateFormatter** ✅
+```dart
+- Formatação de datas
+- Localização (pt-BR)
+- Diferentes formatos de exibição
 ```
 
 ---
@@ -1144,10 +1162,10 @@ Home → Relatórios → Filtrar período → Ver gráficos → Exportar
 ```
 
 ### 19.3 Transições
-- Slide from right (push)
-- Slide from bottom (modal)
-- Fade (dialogs)
-- Scale (popups)
+- [x] Slide from right (push)
+- [x] Slide from bottom (modal)
+- [x] Fade (dialogs)
+- [x] Scale (popups)
 
 ---
 
@@ -1197,9 +1215,9 @@ Desktop: > 900px
 
 ---
 
-## 🎨 ETAPA 22: TEMAS
+## 🎨 ETAPA 22: TEMAS ✅
 
-### 22.1 Tema Escuro (Padrão)
+### 22.1 Tema Escuro (Padrão) ✅
 ```dart
 background: #0A1128
 surface: #1E293B
@@ -1213,11 +1231,11 @@ surface: #FFFFFF
 text: #0F172A
 ```
 
-### 22.3 Cores de Acento
-- Verde: Sucesso/Ganhos
-- Laranja: Atenção/Gastos
-- Vermelho: Erro/Prejuízo
-- Azul: Info/Neutro
+### 22.3 Cores de Acento ✅
+- [x] Verde: Sucesso/Ganhos
+- [x] Laranja: Atenção/Gastos
+- [x] Vermelho: Erro/Prejuízo
+- [x] Azul: Info/Neutro
 
 ---
 
