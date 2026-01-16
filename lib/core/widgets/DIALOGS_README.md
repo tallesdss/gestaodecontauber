@@ -201,3 +201,4 @@ AppConfirmDialog.show(
 **Versão**: 1.0.0  
 **Última atualização**: 2024
 
+
