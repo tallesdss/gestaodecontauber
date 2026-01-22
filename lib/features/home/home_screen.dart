@@ -344,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 200,
                 decoration: BoxDecoration(
                   color: AppColors.backgroundDark.withAlpha((0.3 * 255).round()),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 child: Center(
                   child: Column(
@@ -423,12 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: CurrencyFormatter.format(earning.value),
                 valueColor: AppColors.earnings,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailScreen(earning: earning),
-                    ),
-                  );
+                  context.push('/detail/earning/${earning.id}');
                 },
               ),
             );
@@ -444,12 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: CurrencyFormatter.format(expense.value),
                 valueColor: AppColors.expenses,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailScreen(expense: expense),
-                    ),
-                  );
+                  context.push('/detail/expense/${expense.id}');
                 },
               ),
             );

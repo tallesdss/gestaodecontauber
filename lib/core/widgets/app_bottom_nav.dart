@@ -17,7 +17,7 @@ class AppBottomNavItem {
 
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final void Function(int) onTap;
   final List<AppBottomNavItem> items;
 
   const AppBottomNav({
@@ -63,7 +63,7 @@ class AppBottomNav extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: () => onTap(index),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
