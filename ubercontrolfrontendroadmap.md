@@ -15,23 +15,27 @@ App de controle financeiro para motoristas com foco em:
 - **Design System**: Cores, Tipografia, Espaçamentos, Raio de bordas
 - **Tela Splash**: Completa com animações
 - **Onboarding**: 3 telas completas
-- **Tela Home**: Estrutura básica implementada
-- **Adicionar Ganho/Gasto**: Telas de formulário criadas
-- **Listas de Ganhos/Gastos**: Telas criadas
-- **Componentes Base**: SummaryCard, TransactionCard, AppButton, AppTextField, AppChip, AppCard, AppBottomNav, AppAvatar
+- **Tela Home**: Completa com header, cards de resumo, botões de ação, atividade recente, bottom nav
+- **Adicionar Ganho/Gasto**: Telas de formulário completas com validações
+- **Listas de Ganhos/Gastos**: Telas completas com filtros, resumo, agrupamento por data
+- **Tela de Detalhes**: Completa com informações detalhadas e ações (editar/excluir)
+- **Tela de Relatórios**: Completa com gráficos (linha e pizza), métricas, exportação
+- **Tela de Perfil**: Completa com card de usuário, estatísticas, menu de opções
+- **Componentes Base**: SummaryCard, TransactionCard, AppButton, AppTextField, AppChip, AppCard, AppBottomNav, AppAvatar, StatCard
+- **Gráficos**: LineChart, PieChart implementados
+- **Dialogs**: AppConfirmDialog, AppSuccessDialog, AppErrorDialog, AppAboutDialog, BottomSheet de exportação
 - **Utilitários**: CurrencyFormatter, DateFormatter
-- **Navegação**: Router configurado com GoRouter
+- **Navegação**: Router configurado com GoRouter (todas as rotas)
+- **Telas Auxiliares**: Goals, Categories, Backup, Export, Theme, Notifications, Help (criadas)
 
 ### 🚧 Em Progresso/Pendente:
-- Gráficos (semanal, mensal, por categoria)
-- Tela de Detalhes
-- Relatórios completos
-- Editar Perfil
-- Metas
-- Dialogs e Modais
+- Gráfico semanal na Home (placeholder existente, falta implementar gráfico real)
+- Editar Perfil (tela completa)
+- Relatório Diário detalhado
+- Relatório Mensal detalhado
 - Animações avançadas
-- Responsividade
-- Acessibilidade
+- Responsividade completa
+- Acessibilidade completa
 
 ---
 
@@ -136,7 +140,7 @@ parking: Icons.local_parking
 **Componentes:**
 - [x] Avatar do motorista (esquerda)
 - [x] Saudação: "Olá, [Nome]" (centro)
-- [ ] Ícone de notificações (direita)
+- [x] Ícone de notificações (direita)
 - [x] Data de hoje (abaixo da saudação)
 
 ### 4.2 Card de Resumo do Dia
@@ -185,13 +189,13 @@ parking: Icons.local_parking
 
 ### 4.4 Resumo Semanal (Gráfico)
 **Componentes:**
-- [ ] Título: "Últimos 7 dias"
+- [x] Título: "Últimos 7 dias"
 - [ ] Gráfico de barras empilhadas:
   - Barra verde: Ganhos
   - Barra laranja: Gastos
 - [ ] Eixo X: Dias da semana (Seg, Ter, Qua...)
 - [ ] Eixo Y: Valores em R$
-- [ ] Legenda:
+- [x] Legenda:
   - ● Ganhos (verde)
   - ● Gastos (laranja)
 
@@ -328,7 +332,7 @@ parking: Icons.local_parking
   - Placeholder: "Ex: Troca de óleo, Gasolina comum..."
   - Ícone: description
 
-- [ ] **Foto do Recibo** (Opcional)
+- [x] **Foto do Recibo** (Opcional)
   - Label: "Anexar recibo"
   - Campo: Botão com ícone de câmera
   - Ação: Abrir câmera ou galeria
@@ -362,7 +366,7 @@ parking: Icons.local_parking
 
 ### 7.2 Filtros
 **Componentes:**
-- [ ] Chips de filtro por período:
+- [x] Chips de filtro por período:
   - Hoje
   - Semana
   - Mês
@@ -370,9 +374,9 @@ parking: Icons.local_parking
 
 ### 7.3 Resumo do Período
 **Card com:**
-- [ ] Total de ganhos no período: "R$ 2.450,00"
-- [ ] Total de registros: "45 ganhos"
-- [ ] Média por dia: "R$ 350,00/dia"
+- [x] Total de ganhos no período: "R$ 2.450,00"
+- [x] Total de registros: "45 ganhos"
+- [x] Média por dia: "R$ 350,00/dia"
 
 ### 7.4 Lista de Ganhos
 **Cada card mostra:**
@@ -382,7 +386,7 @@ parking: Icons.local_parking
 - [x] Número de corridas (se tiver)
 - [x] Horas trabalhadas (se tiver)
 - [x] Observações (resumidas)
-- [ ] Ícone de menu (3 pontos):
+- [x] Ícone de menu (3 pontos):
   - Editar
   - Excluir
 
@@ -409,13 +413,13 @@ parking: Icons.local_parking
 
 ### 8.2 Filtros
 **Componentes:**
-- [ ] Chips de filtro por período:
+- [x] Chips de filtro por período:
   - Hoje
   - Semana
   - Mês
   - Personalizado
 
-- [ ] Chips de filtro por categoria:
+- [x] Chips de filtro por categoria:
   - Todos
   - Combustível
   - Manutenção
@@ -424,9 +428,9 @@ parking: Icons.local_parking
 
 ### 8.3 Resumo do Período
 **Card com:**
-- [ ] Total de gastos: "R$ 850,00"
-- [ ] Total de registros: "23 gastos"
-- [ ] Gasto médio: "R$ 37,00"
+- [x] Total de gastos: "R$ 850,00"
+- [x] Total de registros: "23 gastos"
+- [x] Gasto médio: "R$ 37,00"
 
 ### 8.4 Gráfico de Gastos por Categoria
 **Componentes:**
@@ -443,7 +447,7 @@ parking: Icons.local_parking
 - [x] Descrição
 - [x] Valor (laranja, à direita)
 - [x] Badge da categoria
-- [ ] Ícone de menu (3 pontos):
+- [x] Ícone de menu (3 pontos):
   - Ver detalhes
   - Editar
   - Excluir
@@ -461,50 +465,50 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 9: TELA DE DETALHES (GANHO/GASTO)
+## 📱 ETAPA 9: TELA DE DETALHES (GANHO/GASTO) ✅
 
 ### 9.1 Header
 **Componentes:**
-- [ ] Botão voltar
-- [ ] Título: "Detalhes"
-- [ ] Botão editar (ícone)
-- [ ] Botão excluir (ícone)
+- [x] Botão voltar
+- [x] Título: "Detalhes"
+- [x] Botão editar (ícone)
+- [x] Botão excluir (ícone)
 
 ### 9.2 Card Principal
 **Componentes:**
-- [ ] Ícone grande da categoria/tipo
-- [ ] Tipo: "Ganho" ou "Gasto"
-- [ ] Valor (grande, colorido)
-- [ ] Data e hora
+- [x] Ícone grande da categoria/tipo
+- [x] Tipo: "Ganho" ou "Gasto"
+- [x] Valor (grande, colorido)
+- [x] Data e hora
 
 ### 9.3 Informações Detalhadas
 **Lista de itens:**
-- [ ] Data: "29/12/2024"
-- [ ] Categoria: "Combustível" (se gasto)
-- [ ] Plataforma: "Uber" (se ganho)
-- [ ] Descrição: "Gasolina comum"
-- [ ] Litros: "30L" (se combustível)
-- [ ] Corridas: "12" (se ganho)
-- [ ] Horas: "8h" (se ganho)
-- [ ] Observações: "..."
+- [x] Data: "29/12/2024"
+- [x] Categoria: "Combustível" (se gasto)
+- [x] Plataforma: "Uber" (se ganho)
+- [x] Descrição: "Gasolina comum"
+- [x] Litros: "30L" (se combustível)
+- [x] Corridas: "12" (se ganho)
+- [x] Horas: "8h" (se ganho)
+- [x] Observações: "..."
 
 ### 9.4 Foto do Recibo (se houver)
 **Componentes:**
-- [ ] Imagem do recibo (clicável para ampliar)
-- [ ] Botão para adicionar foto (se não tiver)
+- [x] Imagem do recibo (clicável para ampliar)
+- [x] Botão para adicionar foto (se não tiver)
 
 ### 9.5 Botões de Ação
-- [ ] **Botão Editar** (primário)
-- [ ] **Botão Excluir** (secundário, vermelho)
+- [x] **Botão Editar** (primário)
+- [x] **Botão Excluir** (secundário, vermelho)
 
 ---
 
-## 📱 ETAPA 10: TELA DE RELATÓRIOS
+## 📱 ETAPA 10: TELA DE RELATÓRIOS ✅
 
 ### 10.1 Header
 **Componentes:**
-- [ ] Título: "Relatórios"
-- [ ] Dropdown de período:
+- [x] Título: "Relatórios"
+- [x] Dropdown de período:
   - Hoje
   - Esta Semana
   - Este Mês
@@ -513,33 +517,33 @@ parking: Icons.local_parking
 ### 10.2 Cards de Resumo (3 cards horizontais)
 
 **Card 1: Total de Ganhos**
-- [ ] Ícone: trending_up (verde)
-- [ ] Label: "Total de Ganhos"
-- [ ] Valor: "R$ 2.450,00"
+- [x] Ícone: trending_up (verde)
+- [x] Label: "Total de Ganhos"
+- [x] Valor: "R$ 2.450,00"
 - [ ] Variação: "+15% vs mês anterior"
 
 **Card 2: Total de Gastos**
-- [ ] Ícone: trending_down (laranja)
-- [ ] Label: "Total de Gastos"
-- [ ] Valor: "R$ 850,00"
+- [x] Ícone: trending_down (laranja)
+- [x] Label: "Total de Gastos"
+- [x] Valor: "R$ 850,00"
 - [ ] Variação: "+5% vs mês anterior"
 
 **Card 3: Lucro Líquido**
-- [ ] Ícone: account_balance_wallet (verde/vermelho)
-- [ ] Label: "Lucro Líquido"
-- [ ] Valor: "R$ 1.600,00"
+- [x] Ícone: account_balance_wallet (verde/vermelho)
+- [x] Label: "Lucro Líquido"
+- [x] Valor: "R$ 1.600,00"
 - [ ] Variação: "+25% vs mês anterior"
 
 ### 10.3 Gráfico Principal: Ganhos vs Gastos
 **Componentes:**
-- [ ] Título: "Evolução Mensal"
-- [ ] Gráfico de linhas:
+- [x] Título: "Evolução Mensal"
+- [x] Gráfico de linhas:
   - Linha verde: Ganhos
   - Linha laranja: Gastos
   - Linha azul: Lucro
-- [ ] Eixo X: Dias do mês
-- [ ] Eixo Y: Valores em R$
-- [ ] Legenda
+- [x] Eixo X: Dias do mês
+- [x] Eixo Y: Valores em R$
+- [x] Legenda
 - [ ] Tooltip ao tocar
 
 ### 10.4 Métricas Adicionais (Grid 2x2)
@@ -566,11 +570,11 @@ parking: Icons.local_parking
 
 ### 10.5 Gastos por Categoria (Gráfico)
 **Componentes:**
-- [ ] Título: "Gastos por Categoria"
-- [ ] Gráfico de pizza/donut
-- [ ] Cores por categoria
-- [ ] Legenda com valores e percentuais
-- [ ] Lista detalhada abaixo:
+- [x] Título: "Gastos por Categoria"
+- [x] Gráfico de pizza/donut
+- [x] Cores por categoria
+- [x] Legenda com valores e percentuais
+- [x] Lista detalhada abaixo:
   - Combustível: R$ 500,00 (58%)
   - Manutenção: R$ 200,00 (24%)
   - Lavagem: R$ 80,00 (9%)
@@ -698,67 +702,67 @@ parking: Icons.local_parking
 
 ### 13.1 Header
 **Componentes:**
-- [ ] Botão voltar
-- [ ] Título: "Perfil"
+- [x] Botão voltar
+- [x] Título: "Perfil"
 
 ### 13.2 Card do Usuário
 **Componentes:**
-- [ ] Avatar grande (editável)
-- [ ] Nome do motorista
-- [ ] Membro desde: "Dezembro 2024"
-- [ ] Botão "Editar Perfil"
+- [x] Avatar grande (editável)
+- [x] Nome do motorista
+- [x] Membro desde: "Dezembro 2024"
+- [x] Botão "Editar Perfil"
 
 ### 13.3 Estatísticas Rápidas (3 cards)
-- [ ] Total Ganho: "R$ 45.000,00"
-- [ ] Total Gasto: "R$ 12.000,00"
-- [ ] Lucro Total: "R$ 33.000,00"
+- [x] Total Ganho: "R$ 45.000,00"
+- [x] Total Gasto: "R$ 12.000,00"
+- [x] Lucro Total: "R$ 33.000,00"
 
 ### 13.4 Menu de Opções
 **Lista de opções:**
 
-- [ ] **Metas**
+- [x] **Metas**
   - Ícone: flag
   - Subtítulo: "Definir metas mensais"
   - Ação: Navegar para tela de metas
 
-- [ ] **Categorias**
+- [x] **Categorias**
   - Ícone: category
   - Subtítulo: "Gerenciar categorias de gastos"
   - Ação: Navegar para gerenciar categorias
 
-- [ ] **Backup**
+- [x] **Backup**
   - Ícone: cloud_upload
   - Subtítulo: "Fazer backup dos dados"
   - Ação: Fazer backup
 
-- [ ] **Exportar Dados**
+- [x] **Exportar Dados**
   - Ícone: download
   - Subtítulo: "Exportar relatórios"
   - Ação: Exportar
 
-- [ ] **Tema**
+- [x] **Tema**
   - Ícone: palette
   - Subtítulo: "Escuro"
   - Ação: Toggle tema
 
-- [ ] **Notificações**
+- [x] **Notificações**
   - Ícone: notifications
   - Subtítulo: "Gerenciar notificações"
   - Ação: Configurações de notificação
 
-- [ ] **Ajuda**
+- [x] **Ajuda**
   - Ícone: help
   - Subtítulo: "Central de ajuda"
   - Ação: Mostrar ajuda
 
-- [ ] **Sobre**
+- [x] **Sobre**
   - Ícone: info
   - Subtítulo: "Versão 1.0.0"
   - Ação: Mostrar informações do app
 
 ### 13.5 Botão Sair
-- [ ] Botão vermelho: "Sair"
-- [ ] Confirmar logout
+- [x] Botão vermelho: "Sair"
+- [x] Confirmar logout
 
 ---
 
@@ -809,8 +813,8 @@ parking: Icons.local_parking
 
 ### 15.1 Header
 **Componentes:**
-- [ ] Botão voltar
-- [ ] Título: "Minhas Metas"
+- [x] Botão voltar
+- [x] Título: "Minhas Metas"
 
 ### 15.2 Card de Meta Mensal
 **Componentes:**
@@ -953,7 +957,7 @@ parking: Icons.local_parking
 - Menu de ações
 ```
 
-**StatCard**
+**StatCard** ✅
 ```dart
 - Ícone
 - Label
@@ -1002,7 +1006,7 @@ parking: Icons.local_parking
 - Outlined style
 ```
 
-**IconButton**
+**IconButton** ✅ (via AppButton com ícone)
 ```dart
 - Ícone
 - OnPressed
@@ -1023,7 +1027,7 @@ parking: Icons.local_parking
 - Máscara (opcional)
 ```
 
-**AppDatePicker**
+**AppDatePicker** ✅ (implementado via DatePicker padrão do Flutter)
 ```dart
 - Label
 - Data selecionada
@@ -1031,7 +1035,7 @@ parking: Icons.local_parking
 - Data mínima/máxima
 ```
 
-**AppDropdown**
+**AppDropdown** ✅ (implementado via DropdownButton padrão do Flutter)
 ```dart
 - Label
 - Opções (lista)
@@ -1051,7 +1055,7 @@ parking: Icons.local_parking
 - Cor quando selecionado
 ```
 
-**CategoryChip**
+**CategoryChip** ✅ (implementado via AppChip com cores e ícones)
 ```dart
 - Categoria
 - Cor da categoria
@@ -1096,13 +1100,13 @@ parking: Icons.local_parking
 - Botão de ação
 ```
 
-**LoadingState**
+**LoadingState** ✅ (implementado via CircularProgressIndicator padrão)
 ```dart
 - Shimmer cards
 - Loading indicator
 ```
 
-**ErrorState**
+**ErrorState** ✅ (implementado via AppErrorDialog)
 ```dart
 - Ícone de erro
 - Mensagem
@@ -1268,13 +1272,13 @@ text: #0F172A
 - [x] Adicionar Gasto
 - [x] Lista de Ganhos
 - [x] Lista de Gastos
-- [ ] Detalhes (Ganho/Gasto)
-- [ ] Relatórios Gerais
+- [x] Detalhes (Ganho/Gasto)
+- [x] Relatórios Gerais
 - [ ] Relatório Diário
 - [ ] Relatório Mensal
 - [x] Perfil/Configurações
 - [ ] Editar Perfil
-- [ ] Metas
+- [x] Metas (tela criada)
 
 ### Telas Opcionais
 - [ ] Busca/Filtros
