@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                 right: 0,
                 child: GestureDetector(
                   onTap: () {
-                    // TODO: Implementar edição de avatar
+                    context.push('/profile/edit');
                   },
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
@@ -110,7 +110,7 @@ class ProfileScreen extends StatelessWidget {
             text: 'Editar Perfil',
             isOutlined: true,
             onPressed: () {
-              // TODO: Navegar para tela de editar perfil
+              context.push('/profile/edit');
             },
             width: double.infinity,
           ),

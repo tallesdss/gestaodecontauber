@@ -8,6 +8,7 @@ import '../features/earnings/earnings_list_screen.dart';
 import '../features/expenses/add_expense_screen.dart';
 import '../features/expenses/expenses_list_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/profile/edit_profile_screen.dart';
 import '../features/shared/detail_screen.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/goals/goals_screen.dart';
@@ -75,6 +76,10 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/reports',
