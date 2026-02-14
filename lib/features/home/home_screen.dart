@@ -13,7 +13,6 @@ import '../../core/utils/date_formatter.dart';
 import '../../shared/models/driver.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
-import '../shared/detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -423,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: CurrencyFormatter.format(earning.value),
                 valueColor: AppColors.earnings,
                 onTap: () {
-                  context.push('/detail/earning/${earning.id}');
+                  context.push('/detail/earning/${earning.id}', extra: earning);
                 },
               ),
             );
@@ -439,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 value: CurrencyFormatter.format(expense.value),
                 valueColor: AppColors.expenses,
                 onTap: () {
-                  context.push('/detail/expense/${expense.id}');
+                  context.push('/detail/expense/${expense.id}', extra: expense);
                 },
               ),
             );

@@ -310,7 +310,7 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
               label: 'Ver detalhes',
               onTap: () {
                 Navigator.pop(context);
-                context.push('/detail/expense/${expense.id}');
+                context.push('/detail/expense/${expense.id}', extra: expense);
               },
             ),
             const SizedBox(height: AppSpacing.md),
@@ -839,7 +839,7 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
 
     return AppCard(
       onTap: () {
-        context.push('/detail/expense/${expense.id}');
+        context.push('/detail/expense/${expense.id}', extra: expense);
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

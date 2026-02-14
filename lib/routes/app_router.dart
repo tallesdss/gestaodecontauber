@@ -10,6 +10,8 @@ import '../features/expenses/expenses_list_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
 import '../features/shared/detail_screen.dart';
+import '../shared/models/earning.dart';
+import '../shared/models/expense.dart';
 import '../features/reports/reports_screen.dart';
 import '../features/goals/goals_screen.dart';
 import '../features/categories/categories_screen.dart';
@@ -54,23 +56,15 @@ class AppRouter {
       GoRoute(
         path: '/detail/earning/:id',
         builder: (context, state) {
-          // TODO: Buscar earning pelo ID do estado/banco de dados
-          // Por enquanto, retorna uma tela vazia
-          // final earningId = state.pathParameters['id'] ?? '';
-          return DetailScreen(
-            earning: null, // TODO: Buscar do banco de dados usando earningId
-          );
+          final earning = state.extra as Earning?;
+          return DetailScreen(earning: earning);
         },
       ),
       GoRoute(
         path: '/detail/expense/:id',
         builder: (context, state) {
-          // TODO: Buscar expense pelo ID do estado/banco de dados
-          // Por enquanto, retorna uma tela vazia
-          // final expenseId = state.pathParameters['id'] ?? '';
-          return DetailScreen(
-            expense: null, // TODO: Buscar do banco de dados usando expenseId
-          );
+          final expense = state.extra as Expense?;
+          return DetailScreen(expense: expense);
         },
       ),
       GoRoute(

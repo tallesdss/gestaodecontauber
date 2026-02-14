@@ -21,9 +21,8 @@ class DetailScreen extends StatelessWidget {
     this.earning,
     this.expense,
   }) : assert(
-          (earning != null && expense == null) ||
-              (earning == null && expense != null),
-          'Deve fornecer apenas earning ou expense',
+          !(earning != null && expense != null),
+          'Não pode fornecer earning e expense ao mesmo tempo',
         );
 
   bool get isEarning => earning != null;
