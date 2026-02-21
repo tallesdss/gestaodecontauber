@@ -27,10 +27,13 @@ App de controle financeiro para motoristas com foco em:
 - **Utilitários**: CurrencyFormatter, DateFormatter
 - **Navegação**: Router configurado com GoRouter (todas as rotas)
 - **Telas Auxiliares**: Goals, Categories, Backup, Export, Theme, Notifications, Help (criadas)
+- **Editar Perfil**: Tela completa com foto, nome, email, telefone, meta mensal
+- **Metas**: Card mensal, previsão de atingimento, histórico
+- **Dialogs**: Confirmação, Sucesso, Erro, Sobre, BottomSheets (opções e exportar)
+- **Relatórios**: Métricas adicionais (grid 2x2), botão FAB de exportar (PDF/Excel/Compartilhar)
 
 ### 🚧 Em Progresso/Pendente:
 - Gráfico semanal na Home (placeholder existente, falta implementar gráfico real)
-- Editar Perfil (tela completa)
 - Relatório Diário detalhado
 - Relatório Mensal detalhado
 - Animações avançadas
@@ -546,27 +549,27 @@ parking: Icons.local_parking
 - [x] Legenda
 - [ ] Tooltip ao tocar
 
-### 10.4 Métricas Adicionais (Grid 2x2)
+### 10.4 Métricas Adicionais (Grid 2x2) ✅
 
 **Card 1: Ganho Médio Diário**
-- [ ] Ícone: calendar_today
-- [ ] Label: "Média/Dia"
-- [ ] Valor: "R$ 350,00"
+- [x] Ícone: calendar_today
+- [x] Label: "Média/Dia"
+- [x] Valor: "R$ 350,00"
 
 **Card 2: Gasto Médio Diário**
-- [ ] Ícone: shopping_cart
-- [ ] Label: "Gasto/Dia"
-- [ ] Valor: "R$ 85,00"
+- [x] Ícone: shopping_cart
+- [x] Label: "Gasto/Dia"
+- [x] Valor: "R$ 85,00"
 
 **Card 3: Dias Trabalhados**
-- [ ] Ícone: work
-- [ ] Label: "Dias Ativos"
-- [ ] Valor: "22 dias"
+- [x] Ícone: work
+- [x] Label: "Dias Ativos"
+- [x] Valor: "22 dias"
 
 **Card 4: Maior Ganho**
-- [ ] Ícone: star
-- [ ] Label: "Melhor Dia"
-- [ ] Valor: "R$ 520,00"
+- [x] Ícone: star
+- [x] Label: "Melhor Dia"
+- [x] Valor: "R$ 520,00"
 
 ### 10.5 Gastos por Categoria (Gráfico)
 **Componentes:**
@@ -580,11 +583,11 @@ parking: Icons.local_parking
   - Lavagem: R$ 80,00 (9%)
   - Outros: R$ 70,00 (9%)
 
-### 10.6 Botão de Exportar
+### 10.6 Botão de Exportar ✅
 **Componentes:**
-- [ ] Botão flutuante (FAB)
-- [ ] Ícone: download
-- [ ] Ação: Abrir opções:
+- [x] Botão flutuante (FAB)
+- [x] Ícone: download
+- [x] Ação: Abrir opções:
   - Exportar PDF
   - Exportar Excel
   - Compartilhar
@@ -766,80 +769,80 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 14: TELA DE EDITAR PERFIL
+## 📱 ETAPA 14: TELA DE EDITAR PERFIL ✅
 
 ### 14.1 Header
 **Componentes:**
-- [ ] Botão voltar
-- [ ] Título: "Editar Perfil"
-- [ ] Botão salvar
+- [x] Botão voltar
+- [x] Título: "Editar Perfil"
+- [x] Botão salvar
 
 ### 14.2 Formulário
 **Campos:**
 
-- [ ] **Foto**
+- [x] **Foto**
   - Avatar grande (centro)
   - Botão "Alterar Foto"
   - Ação: Câmera ou Galeria
 
-- [ ] **Nome**
+- [x] **Nome**
   - Label: "Nome completo"
   - Campo: TextField
   - Ícone: person
 
-- [ ] **Email** (Opcional)
+- [x] **Email** (Opcional)
   - Label: "Email"
   - Campo: TextField
   - Ícone: email
 
-- [ ] **Telefone** (Opcional)
+- [x] **Telefone** (Opcional)
   - Label: "Telefone"
   - Campo: TextField com máscara
   - Ícone: phone
 
-- [ ] **Meta Mensal**
+- [x] **Meta Mensal**
   - Label: "Meta de ganho mensal"
   - Campo: TextField numérico
   - Placeholder: "R$ 0,00"
   - Ícone: flag
 
 ### 14.3 Botões
-- [ ] Salvar (primário)
-- [ ] Cancelar (secundário)
+- [x] Salvar (primário)
+- [x] Cancelar (secundário)
 
 ---
 
-## 📱 ETAPA 15: TELA DE METAS
+## 📱 ETAPA 15: TELA DE METAS ✅
 
 ### 15.1 Header
 **Componentes:**
 - [x] Botão voltar
 - [x] Título: "Minhas Metas"
 
-### 15.2 Card de Meta Mensal
+### 15.2 Card de Meta Mensal ✅
 **Componentes:**
-- [ ] Título: "Meta de Dezembro"
-- [ ] Valor da meta: "R$ 10.000,00"
-- [ ] Progresso visual (barra)
-- [ ] Valor atual: "R$ 6.600,00"
-- [ ] Percentual: "66%"
-- [ ] Dias restantes: "3 dias"
-- [ ] Botão "Editar Meta"
+- [x] Título: "Meta de Dezembro"
+- [x] Valor da meta: "R$ 10.000,00"
+- [x] Progresso visual (barra)
+- [x] Valor atual: "R$ 6.600,00"
+- [x] Percentual: "66%"
+- [x] Dias restantes: "3 dias"
+- [x] Botão "Editar Meta"
 
-### 15.3 Previsão
+### 15.3 Previsão ✅
 **Card:**
-- [ ] Título: "Previsão de Atingimento"
-- [ ] Texto: "Você precisa ganhar R$ 113,33 por dia"
-- [ ] Ícone de status:
+- [x] Título: "Previsão de Atingimento"
+- [x] Texto: "Você precisa ganhar R$ 113,33 por dia"
+- [x] Ícone de status:
   - ✓ No caminho certo (verde)
   - ⚠ Atenção (amarelo)
   - ✗ Abaixo da meta (vermelho)
 
-### 15.4 Histórico de Metas
+### 15.4 Histórico de Metas ✅
 **Lista:**
-- [ ] Meses anteriores
-- [ ] Status: Atingida/Não atingida
-- [ ] Percentual atingido
+- [x] Meses anteriores
+- [x] Status: Atingida/Não atingida
+- [x] Percentual atingido
 
 ---
 
@@ -894,43 +897,43 @@ parking: Icons.local_parking
 
 ---
 
-## 📱 ETAPA 17: DIALOGS E MODAIS
+## 📱 ETAPA 17: DIALOGS E MODAIS ✅
 
-### 17.1 Dialog de Confirmação de Exclusão
+### 17.1 Dialog de Confirmação de Exclusão ✅
 **Componentes:**
-- [ ] Ícone de alerta (vermelho)
-- [ ] Título: "Excluir [Ganho/Gasto]?"
-- [ ] Texto: "Esta ação não pode ser desfeita"
-- [ ] Botão "Cancelar" (secundário)
-- [ ] Botão "Excluir" (vermelho)
+- [x] Ícone de alerta (vermelho)
+- [x] Título: "Excluir [Ganho/Gasto]?"
+- [x] Texto: "Esta ação não pode ser desfeita"
+- [x] Botão "Cancelar" (secundário)
+- [x] Botão "Excluir" (vermelho)
 
-### 17.2 Modal de Sucesso
+### 17.2 Modal de Sucesso ✅
 **Componentes:**
-- [ ] Ícone de check (verde)
-- [ ] Título: "Salvo com sucesso!"
-- [ ] Botão "OK"
-- [ ] Auto-fechar em 2s
+- [x] Ícone de check (verde)
+- [x] Título: "Salvo com sucesso!"
+- [x] Botão "OK"
+- [x] Auto-fechar em 2s
 
-### 17.3 Modal de Erro
+### 17.3 Modal de Erro ✅
 **Componentes:**
-- [ ] Ícone de erro (vermelho)
-- [ ] Título: "Ops! Algo deu errado"
-- [ ] Mensagem de erro
-- [ ] Botão "Tentar novamente"
-- [ ] Botão "Fechar"
+- [x] Ícone de erro (vermelho)
+- [x] Título: "Ops! Algo deu errado"
+- [x] Mensagem de erro
+- [x] Botão "Tentar novamente"
+- [x] Botão "Fechar"
 
-### 17.4 Bottom Sheet de Opções
+### 17.4 Bottom Sheet de Opções ✅
 **Para ações em itens da lista:**
-- [ ] Ver detalhes
-- [ ] Editar
-- [ ] Duplicar
-- [ ] Excluir
+- [x] Ver detalhes
+- [x] Editar
+- [x] Duplicar
+- [x] Excluir
 
-### 17.5 Bottom Sheet de Exportar
+### 17.5 Bottom Sheet de Exportar ✅
 **Opções:**
-- [ ] PDF
-- [ ] Excel
-- [ ] Compartilhar
+- [x] PDF
+- [x] Excel
+- [x] Compartilhar
 
 ---
 
@@ -1155,7 +1158,7 @@ Home → Tap "Adicionar Ganho" → AddEarningScreen → Salvar → Home (atualiz
 Home → Tap "Adicionar Gasto" → AddExpenseScreen → Salvar → Home (atualizada)
 ```
 
-**Fluxo 3: Ver Detalhes**
+**Fluxo 3: Ver Detalhes** ✅
 ```
 Lista → Tap no item → DetailScreen → Editar → EditScreen → Salvar → Lista
 ```
@@ -1277,15 +1280,15 @@ text: #0F172A
 - [ ] Relatório Diário
 - [ ] Relatório Mensal
 - [x] Perfil/Configurações
-- [ ] Editar Perfil
+- [x] Editar Perfil
 - [x] Metas (tela criada)
 
 ### Telas Opcionais
 - [ ] Busca/Filtros
-- [ ] Categorias personalizadas
-- [ ] Backup/Restore
-- [ ] Tutorial/Ajuda
-- [ ] Sobre o app
+- [x] Categorias personalizadas
+- [x] Backup/Restore
+- [x] Tutorial/Ajuda
+- [x] Sobre o app
 
 ---
 
@@ -1337,18 +1340,18 @@ text: #0F172A
 9. ✅ Lista de Ganhos (básica)
 10. ✅ Lista de Gastos (básica)
 
-### Semana 5-6: Refinamento
-11. Detalhes de transação
-12. Editar transação
+### Semana 5-6: Refinamento ✅
+11. ✅ Detalhes de transação
+12. ✅ Editar transação
 13. Filtros e busca
-14. Gráficos básicos
-15. Relatório simples
+14. ✅ Gráficos básicos
+15. ✅ Relatório simples
 
-### Semana 7-8: Avançado
-16. Relatórios completos
-17. Tela de perfil
-18. Metas
-19. Exportação
+### Semana 7-8: Avançado ✅
+16. ✅ Relatórios completos
+17. ✅ Tela de perfil
+18. ✅ Metas
+19. ✅ Exportação
 20. Animações
 
 ### Semana 9-10: Polimento
