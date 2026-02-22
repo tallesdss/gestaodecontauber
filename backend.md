@@ -15,6 +15,31 @@ Documento com os passos para implementar o backend do **UberControl** usando Sup
 
 ---
 
+## Sequência de implementação
+
+Seguir **nesta ordem**. Cada passo usa o conteúdo das seções indicadas.
+
+| Passo | Descrição | Referência |
+|-------|-----------|------------|
+| **Passo 1** | Pré-requisitos: conta Supabase, anotar URL e anon key, adicionar `supabase_flutter` no Flutter | § 1 |
+| **Passo 2** | Configuração no Supabase: criar tabelas `drivers`, `earnings`, `expenses` (SQL do § 2.1) | § 2.1 |
+| **Passo 3** | Configuração no Supabase: habilitar RLS e criar políticas por tabela | § 2.2 |
+| **Passo 4** | Configuração no Supabase (opcional): triggers para `updated_at` | § 2.3 |
+| **Passo 5** | Consultar mapeamento Supabase (snake_case) ↔ Dart (camelCase) para modelos | § 3 |
+| **Passo 6** | Flutter: inicializar Supabase no `main.dart` e configurar cliente | § 7.1, § 7.2 |
+| **Passo 7** | Flutter: implementar camada de conversão (toSupabaseMap / fromSupabaseMap) | § 7.3 |
+| **Passo 8** | Autenticação: habilitar providers no Supabase e implementar registro/login no app | § 8 |
+| **Passo 9** | Flutter: implementar CRUD de **Drivers** no serviço e nas telas | § 4, § 7.4 |
+| **Passo 10** | Flutter: implementar CRUD de **Earnings** no serviço e nas telas | § 5, § 7.4 |
+| **Passo 11** | Flutter: implementar CRUD de **Expenses** no serviço e nas telas | § 6, § 7.4 |
+| **Passo 12** | Flutter: tratamento de erros e estados de loading em todas as operações | § 7.5 |
+| **Passo 13** | Ajustar modelos Dart (id, userId, datas) se necessário | § 7.6 |
+| **Passo 14** | Validar com o checklist final e testes manuais (criar, listar, editar, excluir) | § 9 |
+
+**Ordem resumida:** 1 → 2 → 3 → (4) → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14.
+
+---
+
 ## 1. Pré-requisitos
 
 - [ ] Conta no [Supabase](https://supabase.com)
@@ -360,4 +385,4 @@ create trigger expenses_updated_at
 - **Documentação Supabase Flutter:** https://supabase.com/docs/reference/dart  
 - **RLS:** https://supabase.com/docs/guides/auth/row-level-security  
 
-Quando for implementar, seguir a ordem: **2 → 3 → 7 → 8 → 9**.
+Quando for implementar, seguir a **Sequência de implementação** (Passo 1 a Passo 14) no início deste documento.
