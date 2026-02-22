@@ -542,6 +542,8 @@ Criar um `SupabaseService` com métodos por entidade:
 
 ## 9. Checklist Final de Implementação
 
+**Itens já feitos:** Passos 1 a 4 — pré-requisitos, tabelas, RLS, triggers e CHECK constraints.
+
 ### Supabase (banco e infraestrutura)
 
 - [x] Criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor.
