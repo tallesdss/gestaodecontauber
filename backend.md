@@ -68,11 +68,11 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 
 ## 1. Pré-requisitos
 
-- [ ] Conta ativa no Supabase (supabase.com).
-- [ ] Acesso ao projeto `mkyftoqllkvemzyxcnes`.
-- [ ] Anotar **Project URL** e **anon key** em: *Project Settings → API*.
-- [ ] Flutter: adicionar dependência `supabase_flutter` no `pubspec.yaml`.
-- [ ] Configurar variáveis de ambiente para URL e anon key (não commitar em produção).
+- [x] Conta ativa no Supabase (supabase.com).
+- [x] Acesso ao projeto `mkyftoqllkvemzyxcnes`.
+- [x] Anotar **Project URL** e **anon key** em: *Project Settings → API*.
+- [x] Flutter: adicionar dependência `supabase_flutter` no `pubspec.yaml`.
+- [x] Configurar variáveis de ambiente para URL e anon key (não commitar em produção).
 
 **Opções para variáveis de ambiente:**
 
