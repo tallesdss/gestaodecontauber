@@ -5,6 +5,16 @@ Documento com os passos para implementar o backend do **UberControl** usando Sup
 
 ---
 
+## Regra — Dados do frontend
+
+O frontend do UberControl possui **vários dados e arquivos mockups** (dados falsos, listas estáticas, exemplos hardcoded). Ao implementar o backend:
+
+- **Todos os dados mock/falsos devem ser substituídos** por dados que venham do backend Supabase (drivers, earnings, expenses, totais, etc.).
+- Nenhuma tela ou fluxo deve depender de dados locais fictícios após a integração; listas, totais, perfis e resumos devem ser obtidos via Supabase.
+- **Por enquanto não alterar nada no Supabase** — apenas documentar e seguir este guia quando for a hora de implementar.
+
+---
+
 ## Informações do Projeto
 
 | Item | Valor |
@@ -32,11 +42,12 @@ Seguir **nesta ordem**. Cada passo usa o conteúdo das seções indicadas.
 | **Passo 9** | Flutter: implementar CRUD de **Drivers** no serviço e nas telas | § 4, § 7.4 |
 | **Passo 10** | Flutter: implementar CRUD de **Earnings** no serviço e nas telas | § 5, § 7.4 |
 | **Passo 11** | Flutter: implementar CRUD de **Expenses** no serviço e nas telas | § 6, § 7.4 |
-| **Passo 12** | Flutter: tratamento de erros e estados de loading em todas as operações | § 7.5 |
-| **Passo 13** | Ajustar modelos Dart (id, userId, datas) se necessário | § 7.6 |
-| **Passo 14** | Validar com o checklist final e testes manuais (criar, listar, editar, excluir) | § 9 |
+| **Passo 12** | Flutter: funções e cálculos (totais de ganhos, gastos, lucro líquido por período) | § 6.5 |
+| **Passo 13** | Flutter: tratamento de erros e estados de loading em todas as operações | § 7.5 |
+| **Passo 14** | Ajustar modelos Dart (id, userId, datas) se necessário | § 7.6 |
+| **Passo 15** | Validar com o checklist final e testes manuais (criar, listar, editar, excluir, totais) | § 9 |
 
-**Ordem resumida:** 1 → 2 → 3 → (4) → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14.
+**Ordem resumida:** 1 → 2 → 3 → (4) → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15.
 
 ---
 
@@ -298,6 +309,80 @@ create trigger expenses_updated_at
 
 ---
 
+## 6.5 Funções e cálculos — totais de ganhos, gastos e lucro
+
+Além do CRUD, o app precisa de **totais** e **lucro** (ganhos − gastos) para dashboard, metas e resumos. Abaixo: onde fazer o cálculo e como expor no serviço.
+
+### Onde calcular
+
+- **Regra geral:** as funções de cálculo devem ser **guardadas no Supabase quando possível** (RPC, views, funções SQL), centralizando lógica e reduzindo tráfego de dados.
+- **Supabase (preferido quando viável):** usar **RPC** ou **view** no PostgreSQL para totais por período; o Flutter chama a função/query e recebe só os números.
+- **Flutter (alternativa):** calcular no app após buscar os dados (listas já filtradas por período). Útil quando a lógica for muito específica do cliente ou ainda em prototipagem.
+
+### Cálculos necessários
+
+| Cálculo | Descrição | Fonte dos dados |
+|--------|-----------|------------------|
+| **Total de ganhos** | Soma de `earnings.value` no período | `getEarnings(uid, start, end)` → somar `value` |
+| **Total de gastos** | Soma de `expenses.value` no período | `getExpenses(uid, start, end)` → somar `value` |
+| **Lucro líquido** | Total ganhos − total gastos | Resultado dos dois acima |
+
+### Flutter — funções no serviço
+
+Adicionar no **SupabaseService** (ou equivalente) métodos que devolvem totais e lucro para um período:
+
+- **`Future<double> getTotalEarnings(String userId, DateTime start, DateTime end)`**  
+  - Chamar `getEarnings(userId, start, end)` (já filtrado por data).  
+  - Somar `e.value` de cada `Earning` e retornar.
+
+- **`Future<double> getTotalExpenses(String userId, DateTime start, DateTime end)`**  
+  - Chamar `getExpenses(userId, start, end)`.  
+  - Somar `e.value` de cada `Expense` e retornar.
+
+- **`Future<double> getNetProfit(String userId, DateTime start, DateTime end)`**  
+  - `getTotalEarnings(userId, start, end) - getTotalExpenses(userId, start, end)` (ou chamar os dois em paralelo e subtrair no Dart).
+
+Formato das datas ao filtrar no Supabase: usar o mesmo que já está no CRUD (ex.: ISO 8601 `YYYY-MM-DD` para `date`).
+
+### Supabase (opcional) — RPC para totais
+
+Se quiser evitar trazer todas as linhas e fazer a soma no backend, pode criar uma função SQL e chamá-la via RPC:
+
+```sql
+-- Retorna totais e lucro do usuário logado em um período (datas em YYYY-MM-DD).
+-- Usa auth.uid(), seguro para chamada com anon key.
+create or replace function public.get_period_totals(
+  p_start date,
+  p_end date
+)
+returns table (
+  total_earnings numeric,
+  total_expenses numeric,
+  net_profit numeric
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    coalesce((select sum(value) from public.earnings where user_id = auth.uid() and date >= p_start and date <= p_end), 0),
+    coalesce((select sum(value) from public.expenses where user_id = auth.uid() and date >= p_start and date <= p_end), 0),
+    coalesce((select sum(value) from public.earnings where user_id = auth.uid() and date >= p_start and date <= p_end), 0)
+    - coalesce((select sum(value) from public.expenses where user_id = auth.uid() and date >= p_start and date <= p_end), 0);
+$$;
+```
+
+No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', 'p_end': '2025-01-31'})` e ler `total_earnings`, `total_expenses`, `net_profit`.
+
+### Resumo
+
+- **Lucros (ganhos):** total = soma de `earnings.value` no período.  
+- **Gastos:** total = soma de `expenses.value` no período.  
+- **Lucro líquido:** total ganhos − total gastos.  
+- **Onde implementar:** preferir guardar funções no Supabase (RPC/views) quando possível; usar Flutter para cálculos quando não for viável no backend.
+
+---
+
 ## 7. Implementação no Flutter (passos)
 
 ### 7.1 Dependência e inicialização
@@ -374,8 +459,9 @@ create trigger expenses_updated_at
 - [ ] Implementar CRUD de Drivers no serviço e nas telas.
 - [ ] Implementar CRUD de Earnings no serviço e nas telas.
 - [ ] Implementar CRUD de Expenses no serviço e nas telas.
+- [ ] Implementar funções/cálculos: total ganhos, total gastos, lucro líquido por período (§ 6.5).
 - [ ] Tratamento de erros e loading em todas as operações.
-- [ ] Testes manuais: criar, listar, editar e excluir em cada entidade.
+- [ ] Testes manuais: criar, listar, editar e excluir em cada entidade; validar totais e lucro.
 
 ---
 
