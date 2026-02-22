@@ -50,7 +50,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 | 3 | Supabase: habilitar RLS e criar políticas por tabela | § 2.2 | [x] |
 | 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 | [x] |
 | 5 | Supabase: criar bucket no Storage para comprovantes e configurar políticas | § 2.5 | [x] |
-| 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 | |
+| 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 | [x] |
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | |
 | 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | |
 | 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | |
@@ -551,7 +551,7 @@ Criar um `SupabaseService` com métodos por entidade:
 - [x] Criar triggers de `updated_at`.
 - [x] Adicionar CHECK constraints.
 - [x] Criar bucket `receipts` no Storage e configurar políticas.
-- [ ] (Opcional) Criar RPC `get_period_totals` e revogar `execute` de `public`.
+- [x] (Opcional) Criar RPC `get_period_totals` e revogar `execute` de `public`.
 
 ### Flutter (app)
 
