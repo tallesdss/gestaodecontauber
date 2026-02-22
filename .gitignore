@@ -43,6 +43,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Variáveis de ambiente (nunca commitar chaves reais)
+.env
+
 
 
 
