@@ -47,7 +47,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 |-------|-----------|-------|--------|
 | ~~1–6~~ | *(concluídos — ocultos)* | — | ✅ |
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | ✅ |
-| 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | |
+| 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | ✅ |
 | 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | |
 | 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | |
 | 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 | |
