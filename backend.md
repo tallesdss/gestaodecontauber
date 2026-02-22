@@ -29,25 +29,27 @@ O frontend do UberControl possui **vários dados e arquivos mockups** (dados fal
 
 Seguir **nesta ordem**. Cada passo usa o conteúdo das seções indicadas.
 
+**Importante:** a autenticação (Passo 8) é **obrigatória antes** de implementar os CRUDs: sem `auth.uid()` o RLS bloqueia todas as linhas. Em produção não há “modo sem auth”.
+
 | Passo | Descrição | Referência |
 |-------|-----------|------------|
-| **Passo 1** | Pré-requisitos: conta Supabase, anotar URL e anon key, adicionar `supabase_flutter` no Flutter | § 1 |
+| **Passo 1** | Pré-requisitos: conta Supabase, anotar URL e anon key, configurar env, adicionar `supabase_flutter` | § 1 |
 | **Passo 2** | Configuração no Supabase: criar tabelas `drivers`, `earnings`, `expenses` (SQL do § 2.1) | § 2.1 |
 | **Passo 3** | Configuração no Supabase: habilitar RLS e criar políticas por tabela | § 2.2 |
-| **Passo 4** | Configuração no Supabase (opcional): triggers para `updated_at` | § 2.3 |
+| **Passo 4** | Configuração no Supabase (opcional): triggers para `updated_at`; (opcional) CHECK constraints § 2.4 | § 2.3, § 2.4 |
 | **Passo 5** | Consultar mapeamento Supabase (snake_case) ↔ Dart (camelCase) para modelos | § 3 |
 | **Passo 6** | Flutter: inicializar Supabase no `main.dart` e configurar cliente | § 7.1, § 7.2 |
 | **Passo 7** | Flutter: implementar camada de conversão (toSupabaseMap / fromSupabaseMap) | § 7.3 |
-| **Passo 8** | Autenticação: habilitar providers no Supabase e implementar registro/login no app | § 8 |
-| **Passo 9** | Flutter: implementar CRUD de **Drivers** no serviço e nas telas | § 4, § 7.4 |
-| **Passo 10** | Flutter: implementar CRUD de **Earnings** no serviço e nas telas | § 5, § 7.4 |
-| **Passo 11** | Flutter: implementar CRUD de **Expenses** no serviço e nas telas | § 6, § 7.4 |
-| **Passo 12** | Flutter: funções e cálculos (totais de ganhos, gastos, lucro líquido por período) | § 6.5 |
-| **Passo 13** | Flutter: tratamento de erros e estados de loading em todas as operações | § 7.5 |
-| **Passo 14** | Ajustar modelos Dart (id, userId, datas) se necessário | § 7.6 |
-| **Passo 15** | Validar com o checklist final e testes manuais (criar, listar, editar, excluir, totais) | § 9 |
+| **Passo 8** | **Ajustar modelos Dart** (id, userId, datas, created_at/updated_at) conforme § 7.6 | § 7.6 |
+| **Passo 9** | **Autenticação:** habilitar providers no Supabase e implementar registro/login no app | § 8 |
+| **Passo 10** | Flutter: implementar CRUD de **Drivers** no serviço e nas telas | § 4, § 7.4 |
+| **Passo 11** | Flutter: implementar CRUD de **Earnings** no serviço e nas telas | § 5, § 7.4 |
+| **Passo 12** | Flutter: implementar CRUD de **Expenses** no serviço e nas telas | § 6, § 7.4 |
+| **Passo 13** | Flutter: funções e cálculos (totais de ganhos, gastos, lucro líquido por período) | § 6.5 |
+| **Passo 14** | Flutter: tratamento de erros e estados de loading em todas as operações | § 7.5 |
+| **Passo 15** | Validar com o checklist final e testes (manuais e, se possível, unitários/integração) | § 9 |
 
-**Ordem resumida:** 1 → 2 → 3 → (4) → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15.
+**Ordem resumida:** 1 → 2 → 3 → (4) → 5 → 6 → 7 → **8 (modelos)** → **9 (Auth)** → 10 → 11 → 12 → 13 → 14 → 15.
 
 ---
 
@@ -57,6 +59,10 @@ Seguir **nesta ordem**. Cada passo usa o conteúdo das seções indicadas.
 - [ ] Acesso ao projeto: `mkyftoqllkvemzyxcnes`
 - [ ] Anotar **Project URL** e **anon key** em: *Project Settings → API*
 - [ ] Flutter: adicionar dependência `supabase_flutter` no `pubspec.yaml`
+- [ ] **Variáveis de ambiente (URL e anon key):** não commitar keys em produção. Opções:
+  - **`--dart-define`:** passar `SUPABASE_URL` e `SUPABASE_ANON_KEY` na build e ler com `String.fromEnvironment`.
+  - **`flutter_dotenv`:** arquivo `.env` no projeto (adicionar ao `.gitignore`) e carregar com `dotenv.env['SUPABASE_ANON_KEY']`.
+  - **Flavors:** usar configurações por ambiente (dev/staging/prod) com suas próprias keys.
 
 ---
 
@@ -107,6 +113,8 @@ create index idx_earnings_user_date on public.earnings(user_id, date);
 ```
 
 #### Tabela `expenses` (gastos)
+
+- **Categoria:** o campo `category` é `text` livre. Se quiser relatórios e filtros consistentes, considere depois uma tabela de categorias (FK) ou enum; se for livre de propósito, manter e eventualmente ter lista sugerida apenas na UI.
 
 ```sql
 create table public.expenses (
@@ -192,6 +200,28 @@ create trigger expenses_updated_at
   for each row execute function public.set_updated_at();
 ```
 
+### 2.4 Validações no banco — CHECK constraints (opcional)
+
+Para evitar dados inválidos mesmo se o app enviar valores incorretos, pode-se adicionar restrições CHECK após criar as tabelas:
+
+```sql
+-- Valores monetários e numéricos não negativos
+alter table public.earnings add constraint earnings_value_non_negative check (value >= 0);
+alter table public.earnings add constraint earnings_number_of_rides_non_negative check (number_of_rides is null or number_of_rides >= 0);
+alter table public.earnings add constraint earnings_hours_worked_non_negative check (hours_worked is null or hours_worked >= 0);
+
+alter table public.expenses add constraint expenses_value_non_negative check (value >= 0);
+alter table public.expenses add constraint expenses_liters_non_negative check (liters is null or liters >= 0);
+
+alter table public.drivers add constraint drivers_monthly_goal_non_negative check (monthly_goal >= 0);
+```
+
+Opcional: restringir `date` a um intervalo razoável (ex.: não permitir datas muito futuras) conforme regra de negócio.
+
+### 2.5 Migrações versionadas (recomendado para evolução)
+
+Em vez de executar SQL solto no Editor, considerar **migrações versionadas** do Supabase (arquivos no repo, ex.: `supabase/migrations/`) para histórico, rollback e aplicação consistente em outros ambientes. Ver documentação Supabase sobre [Local Development](https://supabase.com/docs/guides/cli/local-development).
+
 ---
 
 ## 3. Mapeamento: Supabase (snake_case) ↔ Dart (camelCase)
@@ -203,6 +233,8 @@ create trigger expenses_updated_at
 | drivers  | name              | name                 |
 | drivers  | monthly_goal      | monthlyGoal          |
 | drivers  | member_since      | memberSince          |
+| drivers  | created_at        | createdAt            |
+| drivers  | updated_at        | updatedAt            |
 | earnings | id                | id                   |
 | earnings | date              | date                 |
 | earnings | value             | value                |
@@ -210,6 +242,8 @@ create trigger expenses_updated_at
 | earnings | number_of_rides   | numberOfRides        |
 | earnings | hours_worked      | hoursWorked          |
 | earnings | notes             | notes                |
+| earnings | created_at        | createdAt            |
+| earnings | updated_at        | updatedAt            |
 | expenses | id                | id                   |
 | expenses | date              | date                 |
 | expenses | category          | category             |
@@ -218,6 +252,10 @@ create trigger expenses_updated_at
 | expenses | liters            | liters               |
 | expenses | receipt_image_path| receiptImagePath     |
 | expenses | notes             | notes                |
+| expenses | created_at        | createdAt            |
+| expenses | updated_at        | updatedAt            |
+
+**Datas:** Para `earnings.date` e `expenses.date` usar apenas a **data do dia** (sem hora). Para `created_at` e `updated_at` usar **timestamptz**; no Flutter definir se exibição será em UTC ou timezone local.
 
 ---
 
@@ -228,6 +266,7 @@ create trigger expenses_updated_at
 - **Quando:** após registro/login do usuário, se ainda não existir driver.
 - **Supabase:** `insert` em `drivers` com `user_id = auth.uid()`.
 - **Flutter:** converter `Driver.toMap()` para snake_case e incluir `user_id` no insert.
+- **Driver único por usuário:** a tabela tem `unique(user_id)`. Para evitar erro de duplicata (ex.: usuário reabre o app ou race condition), usar **upsert** (`insert` com `onConflict` em `user_id` e `update` dos campos) ou fluxo **select + insert só se não existir** antes de inserir.
 
 ```dart
 // Exemplo de payload (após toMap + conversão para snake_case)
@@ -263,6 +302,7 @@ create trigger expenses_updated_at
 ### 5.2 Read
 
 - **Listar todos (do usuário):** `select().eq('user_id', uid).order('date', ascending: false)`.
+- **Paginação:** para listas grandes, usar `.range(from, to)` (ex.: 0–49, 50–99) ou `.limit(50)` com offset, e “carregar mais” na UI para evitar trazer todos os registros de uma vez.
 - **Por período:** adicionar `.gte('date', start).lte('date', end)`.
 - **Um por id:** `select().eq('id', id).maybeSingle()`.
 - **Flutter:** cada row → `Earning.fromMap()` com conversão snake_case → camelCase (e `id` como String).
@@ -291,6 +331,7 @@ create trigger expenses_updated_at
 ### 6.2 Read
 
 - **Listar todos:** `select().eq('user_id', uid).order('date', ascending: false)`.
+- **Paginação:** usar `.range(from, to)` ou `.limit(n)` com offset e “carregar mais” para listas grandes.
 - **Por período:** `.gte('date', start).lte('date', end)`.
 - **Por categoria:** `.eq('category', category)` (com `user_id`).
 - **Um por id:** `select().eq('id', id).maybeSingle()`.
@@ -346,11 +387,12 @@ Formato das datas ao filtrar no Supabase: usar o mesmo que já está no CRUD (ex
 
 ### Supabase (opcional) — RPC para totais
 
-Se quiser evitar trazer todas as linhas e fazer a soma no backend, pode criar uma função SQL e chamá-la via RPC:
+Se quiser evitar trazer todas as linhas e fazer a soma no backend, pode criar uma função SQL e chamá-la via RPC. A função usa `security definer` e `auth.uid()`, então é segura com anon key (não é necessária política RLS na tabela para a RPC).
+
+**Versão com CTE** (calcula totais uma vez e reutiliza; mais legível e fácil de manter):
 
 ```sql
 -- Retorna totais e lucro do usuário logado em um período (datas em YYYY-MM-DD).
--- Usa auth.uid(), seguro para chamada com anon key.
 create or replace function public.get_period_totals(
   p_start date,
   p_end date
@@ -364,11 +406,10 @@ language sql
 security definer
 set search_path = public
 as $$
-  select
-    coalesce((select sum(value) from public.earnings where user_id = auth.uid() and date >= p_start and date <= p_end), 0),
-    coalesce((select sum(value) from public.expenses where user_id = auth.uid() and date >= p_start and date <= p_end), 0),
-    coalesce((select sum(value) from public.earnings where user_id = auth.uid() and date >= p_start and date <= p_end), 0)
-    - coalesce((select sum(value) from public.expenses where user_id = auth.uid() and date >= p_start and date <= p_end), 0);
+  with
+    te as (select coalesce(sum(value), 0) as v from public.earnings where user_id = auth.uid() and date >= p_start and date <= p_end),
+    tx as (select coalesce(sum(value), 0) as v from public.expenses where user_id = auth.uid() and date >= p_start and date <= p_end)
+  select te.v, tx.v, te.v - tx.v from te, tx;
 $$;
 ```
 
@@ -394,7 +435,7 @@ No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', '
    ```
 2. No `main.dart`, antes de `runApp`:
    - `await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);`
-3. Guardar URL e anon key em variáveis de ambiente ou constants (nunca commitar keys sensíveis em produção; usar env).
+3. Guardar URL e anon key via variáveis de ambiente (ver § 1; nunca commitar keys em produção).
 
 ### 7.2 Cliente Supabase
 
@@ -427,23 +468,26 @@ No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', '
 ### 7.5 Tratamento de erros e loading
 
 - Todas as chamadas ao Supabase em try/catch.
-- Mapear erros do Supabase (ex.: PostgrestException) para mensagens amigáveis.
+- Mapear erros do Supabase (ex.: `PostgrestException`) para mensagens amigáveis:
+  - **23505** (unique_violation): ex.: “Já existe um perfil para este usuário.”
+  - **23503** (foreign_key_violation): ex.: “Registro em uso ou referência inválida.”
+  - **Outros códigos:** mensagem genérica e, em debug, logar `exception.message` ou código.
 - Usar loading states nas telas (lista, formulários) enquanto chama os serviços.
 
 ### 7.6 Atualização dos modelos Dart (se necessário)
 
-- **Driver:** considerar adicionar `id` (String/UUID) e `userId` se quiser armazenar no model.
-- **Earning / Expense:** já possuem `id` e `date`; garantir que `date` seja enviado como ISO (date ou timestamptz) e convertido corretamente no `fromMap` (incluindo timezone se usar timestamptz).
+- **Driver:** adicionar `id` (String/UUID) e `userId`; opcionalmente `createdAt` e `updatedAt` (ver § 3).
+- **Earning / Expense:** já possuem `id` e `date`; garantir que `date` seja enviado como ISO (apenas data do dia, ex.: `YYYY-MM-DD`) e convertido corretamente no `fromMap`. Incluir `createdAt` e `updatedAt` nos modelos se for exibir “criado em” / “editado em”.
 
 ---
 
 ## 8. Autenticação (resumo)
 
-- Sem auth, não há `auth.uid()` e o RLS bloqueará todas as linhas.
+- Sem auth, não há `auth.uid()` e o RLS bloqueará todas as linhas. **Em produção, auth é obrigatório antes de qualquer CRUD.**
 - Passos recomendados:
   1. Habilitar **Email** (e opcionalmente **OAuth**) em Authentication → Providers.
   2. No app: registro com `signUp`, login com `signInWithPassword`, logout com `signOut`.
-  3. Após login, criar/atualizar registro em `drivers` (Create do Driver) se ainda não existir.
+  3. Após login, criar ou atualizar registro em `drivers` (usar upsert ou select+insert conforme § 4.1) se ainda não existir.
   4. Todas as operações de CRUD devem ser feitas com o usuário logado.
 
 ---
@@ -452,16 +496,18 @@ No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', '
 
 - [ ] Criar tabelas no Supabase (drivers, earnings, expenses).
 - [ ] Aplicar RLS e políticas.
-- [ ] (Opcional) Triggers `updated_at`.
-- [ ] Adicionar `supabase_flutter` e inicializar no app.
+- [ ] (Opcional) Triggers `updated_at`; (opcional) CHECK constraints § 2.4.
+- [ ] Adicionar `supabase_flutter` e inicializar no app; configurar env para URL e anon key (§ 1).
 - [ ] Implementar mapeamento snake_case ↔ camelCase.
-- [ ] Implementar Auth (registro/login) se for multi-usuário.
-- [ ] Implementar CRUD de Drivers no serviço e nas telas.
-- [ ] Implementar CRUD de Earnings no serviço e nas telas.
-- [ ] Implementar CRUD de Expenses no serviço e nas telas.
+- [ ] Ajustar modelos Dart (id, userId, datas, created_at/updated_at) antes dos CRUDs (§ 7.6).
+- [ ] Implementar Auth (registro/login); obrigatório antes dos CRUDs em produção.
+- [ ] Implementar CRUD de Drivers no serviço e nas telas (incl. upsert/verificação para 1 por usuário).
+- [ ] Implementar CRUD de Earnings no serviço e nas telas (incl. paginação nas listagens).
+- [ ] Implementar CRUD de Expenses no serviço e nas telas (incl. paginação nas listagens).
 - [ ] Implementar funções/cálculos: total ganhos, total gastos, lucro líquido por período (§ 6.5).
-- [ ] Tratamento de erros e loading em todas as operações.
+- [ ] Tratamento de erros (mapear códigos Postgrest) e loading em todas as operações.
 - [ ] Testes manuais: criar, listar, editar e excluir em cada entidade; validar totais e lucro.
+- [ ] (Recomendado) Testes unitários dos serviços (mock do `SupabaseClient`) para CRUD e totais; opcional: testes de integração contra projeto Supabase de teste.
 
 ---
 
@@ -471,4 +517,11 @@ No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', '
 - **Documentação Supabase Flutter:** https://supabase.com/docs/reference/dart  
 - **RLS:** https://supabase.com/docs/guides/auth/row-level-security  
 
-Quando for implementar, seguir a **Sequência de implementação** (Passo 1 a Passo 14) no início deste documento.
+Quando for implementar, seguir a **Sequência de implementação** (Passo 1 a Passo 15) no início deste documento.
+
+---
+
+## 11. Melhorias futuras (opcional)
+
+- **Realtime:** usar subscriptions do Supabase para atualizar listas em tempo real em múltiplos dispositivos.
+- **Offline:** estratégia de cache local e sincronização quando voltar online (ex.: persistência local + fila de escritas).
