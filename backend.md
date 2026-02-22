@@ -43,26 +43,26 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 
 > ⚠️ **A autenticação (Passo 11) é obrigatória antes de qualquer CRUD.** Sem `auth.uid()` o RLS bloqueia todas as linhas. Em produção, não existe modo sem autenticação.
 
-| Passo | Descrição | Seção |
-|-------|-----------|-------|
-| 1 | Pré-requisitos: conta Supabase, URL e anon key, variáveis de ambiente, adicionar `supabase_flutter` | § 1 |
-| 2 | Supabase: criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor | § 2.1 |
-| 3 | Supabase: habilitar RLS e criar políticas por tabela | § 2.2 |
-| 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 |
-| 5 | Supabase: criar bucket no Storage para comprovantes e configurar políticas | § 2.5 |
-| 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 |
-| 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 |
-| 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 |
-| 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 |
-| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 |
-| 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 |
-| 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 |
-| 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 |
-| 14 | Flutter: CRUD de Expenses no serviço e nas telas (com paginação, filtro por período e categoria) | § 6, § 7.4 |
-| 15 | Flutter: integrar upload/download de comprovantes via Supabase Storage | § 6.6 |
-| 16 | Flutter: funções de cálculo — total ganhos, total gastos, lucro líquido por período | § 6.5 |
-| 17 | Flutter: tratamento de erros (mapear códigos Postgrest) e estados de loading em todas as operações | § 7.5 |
-| 18 | Validar com o checklist final e executar testes | § 9 |
+| Passo | Descrição | Seção | Status |
+|-------|-----------|-------|--------|
+| 1 | Pré-requisitos: conta Supabase, URL e anon key, variáveis de ambiente, adicionar `supabase_flutter` | § 1 | [x] |
+| 2 | Supabase: criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor | § 2.1 | [x] |
+| 3 | Supabase: habilitar RLS e criar políticas por tabela | § 2.2 | [x] |
+| 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 | |
+| 5 | Supabase: criar bucket no Storage para comprovantes e configurar políticas | § 2.5 | |
+| 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 | |
+| 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | |
+| 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | |
+| 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | |
+| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | |
+| 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 | |
+| 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 | |
+| 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 | |
+| 14 | Flutter: CRUD de Expenses no serviço e nas telas (com paginação, filtro por período e categoria) | § 6, § 7.4 | |
+| 15 | Flutter: integrar upload/download de comprovantes via Supabase Storage | § 6.6 | |
+| 16 | Flutter: funções de cálculo — total ganhos, total gastos, lucro líquido por período | § 6.5 | |
+| 17 | Flutter: tratamento de erros (mapear códigos Postgrest) e estados de loading em todas as operações | § 7.5 | |
+| 18 | Validar com o checklist final e executar testes | § 9 | |
 
 ---
 
@@ -85,6 +85,8 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 ## 2. Configuração no Supabase
 
 ### 2.1 Criar Tabelas
+
+- [x] **Concluído** (tabelas `drivers`, `earnings`, `expenses` criadas via migração).
 
 Executar no **SQL Editor** do Supabase, na ordem abaixo.
 
@@ -148,6 +150,8 @@ create index idx_expenses_category on public.expenses(user_id, category);
 ---
 
 ### 2.2 Row Level Security (RLS)
+
+- [x] **Concluído** (RLS habilitado e políticas por tabela aplicadas).
 
 Garante que cada usuário acesse apenas seus próprios dados.
 ```sql
@@ -536,8 +540,8 @@ Criar um `SupabaseService` com métodos por entidade:
 
 ### Supabase (banco e infraestrutura)
 
-- [ ] Criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor.
-- [ ] Habilitar RLS e aplicar políticas em todas as tabelas.
+- [x] Criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor.
+- [x] Habilitar RLS e aplicar políticas em todas as tabelas.
 - [ ] Criar triggers de `updated_at`.
 - [ ] Adicionar CHECK constraints.
 - [ ] Criar bucket `receipts` no Storage e configurar políticas.
