@@ -48,7 +48,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 | 1 | Pré-requisitos: conta Supabase, URL e anon key, variáveis de ambiente, adicionar `supabase_flutter` | § 1 | [x] |
 | 2 | Supabase: criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor | § 2.1 | [x] |
 | 3 | Supabase: habilitar RLS e criar políticas por tabela | § 2.2 | [x] |
-| 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 | |
+| 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 | [x] |
 | 5 | Supabase: criar bucket no Storage para comprovantes e configurar políticas | § 2.5 | |
 | 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 | |
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | |
@@ -183,6 +183,8 @@ create policy "expenses_delete_own" on public.expenses for delete using (auth.ui
 
 ### 2.3 Trigger para `updated_at`
 
+- [x] **Concluído** (função `set_updated_at` e triggers em `drivers`, `earnings`, `expenses`).
+
 > ℹ️ Recomendado. Garante que o campo `updated_at` seja atualizado automaticamente pelo banco, sem depender do Flutter.
 ```sql
 create or replace function public.set_updated_at()
@@ -204,6 +206,8 @@ create trigger expenses_updated_at
 ---
 
 ### 2.4 CHECK Constraints (opcional, recomendado para produção)
+
+- [x] **Concluído** (constraints de valor/rides/horas em earnings; value/liters em expenses; monthly_goal em drivers).
 
 Protege o banco de valores inválidos mesmo que o app envie dados incorretos.
 ```sql
@@ -542,8 +546,8 @@ Criar um `SupabaseService` com métodos por entidade:
 
 - [x] Criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor.
 - [x] Habilitar RLS e aplicar políticas em todas as tabelas.
-- [ ] Criar triggers de `updated_at`.
-- [ ] Adicionar CHECK constraints.
+- [x] Criar triggers de `updated_at`.
+- [x] Adicionar CHECK constraints.
 - [ ] Criar bucket `receipts` no Storage e configurar políticas.
 - [ ] (Opcional) Criar RPC `get_period_totals` e revogar `execute` de `public`.
 
