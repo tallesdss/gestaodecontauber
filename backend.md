@@ -45,12 +45,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 
 | Passo | Descrição | Seção | Status |
 |-------|-----------|-------|--------|
-| 1 | Pré-requisitos: conta Supabase, URL e anon key, variáveis de ambiente, adicionar `supabase_flutter` | § 1 | [x] |
-| 2 | Supabase: criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor | § 2.1 | [x] |
-| 3 | Supabase: habilitar RLS e criar políticas por tabela | § 2.2 | [x] |
-| 4 | Supabase: criar triggers para `updated_at` e CHECK constraints (opcionais, mas recomendados) | § 2.3, § 2.4 | [x] |
-| 5 | Supabase: criar bucket no Storage para comprovantes e configurar políticas | § 2.5 | [x] |
-| 6 | Supabase (opcional): criar RPC `get_period_totals`; revogar `execute` de `public` e conceder apenas a `authenticated` | § 6.5 | [x] |
+| ~~1–6~~ | *(concluídos — ocultos)* | — | ✅ |
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | |
 | 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | |
 | 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | |
@@ -68,17 +63,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 
 ## 1. Pré-requisitos
 
-- [x] Conta ativa no Supabase (supabase.com).
-- [x] Acesso ao projeto `mkyftoqllkvemzyxcnes`.
-- [x] Anotar **Project URL** e **anon key** em: *Project Settings → API*.
-- [x] Flutter: adicionar dependência `supabase_flutter` no `pubspec.yaml`.
-- [x] Configurar variáveis de ambiente para URL e anon key (não commitar em produção).
-
-**Opções para variáveis de ambiente:**
-
-- **`--dart-define`:** passar `SUPABASE_URL` e `SUPABASE_ANON_KEY` na build e ler com `String.fromEnvironment`.
-- **`flutter_dotenv`:** arquivo `.env` no projeto (adicionado ao `.gitignore`) carregado com `dotenv.env['SUPABASE_ANON_KEY']`.
-- **Flavors:** configurações por ambiente (dev/staging/prod) com suas próprias keys.
+✅ **Concluído** — conta Supabase, URL/anon key, `supabase_flutter`, variáveis de ambiente configuradas.
 
 ---
 
@@ -86,174 +71,31 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 
 ### 2.1 Criar Tabelas
 
-- [x] **Concluído** (tabelas `drivers`, `earnings`, `expenses` criadas via migração).
-
-Executar no **SQL Editor** do Supabase, na ordem abaixo.
-
-#### Tabela `drivers` (perfil do motorista)
-```sql
-create table public.drivers (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  name text not null,
-  monthly_goal numeric(12, 2) not null default 0,
-  member_since timestamptz,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  unique(user_id)
-);
-create index idx_drivers_user_id on public.drivers(user_id);
-```
-
-#### Tabela `earnings` (ganhos)
-```sql
-create table public.earnings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  date date not null,
-  value numeric(12, 2) not null,
-  platform text,
-  number_of_rides int,
-  hours_worked numeric(6, 2),
-  notes text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-create index idx_earnings_user_id on public.earnings(user_id);
-create index idx_earnings_date on public.earnings(date);
-create index idx_earnings_user_date on public.earnings(user_id, date);
-```
-
-#### Tabela `expenses` (gastos)
-
-> ℹ️ O campo `category` é texto livre por padrão. Caso queira filtros e relatórios consistentes, considere criar uma tabela de categorias com FK — mas defina isso antes de ir para produção, pois alterar depois exige migração mais trabalhosa.
-```sql
-create table public.expenses (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  date date not null,
-  category text not null,
-  value numeric(12, 2) not null,
-  description text not null,
-  liters numeric(8, 2),
-  receipt_image_path text,
-  notes text,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-create index idx_expenses_user_id on public.expenses(user_id);
-create index idx_expenses_date on public.expenses(date);
-create index idx_expenses_user_date on public.expenses(user_id, date);
-create index idx_expenses_category on public.expenses(user_id, category);
-```
+✅ **Concluído** — tabelas `drivers`, `earnings`, `expenses` criadas via migração.
 
 ---
 
 ### 2.2 Row Level Security (RLS)
 
-- [x] **Concluído** (RLS habilitado e políticas por tabela aplicadas).
-
-Garante que cada usuário acesse apenas seus próprios dados.
-```sql
--- Habilitar RLS em todas as tabelas
-alter table public.drivers enable row level security;
-alter table public.earnings enable row level security;
-alter table public.expenses enable row level security;
-
--- Políticas: drivers
-create policy "drivers_select_own" on public.drivers for select using (auth.uid() = user_id);
-create policy "drivers_insert_own" on public.drivers for insert with check (auth.uid() = user_id);
-create policy "drivers_update_own" on public.drivers for update using (auth.uid() = user_id);
-create policy "drivers_delete_own" on public.drivers for delete using (auth.uid() = user_id);
-
--- Políticas: earnings
-create policy "earnings_select_own" on public.earnings for select using (auth.uid() = user_id);
-create policy "earnings_insert_own" on public.earnings for insert with check (auth.uid() = user_id);
-create policy "earnings_update_own" on public.earnings for update using (auth.uid() = user_id);
-create policy "earnings_delete_own" on public.earnings for delete using (auth.uid() = user_id);
-
--- Políticas: expenses
-create policy "expenses_select_own" on public.expenses for select using (auth.uid() = user_id);
-create policy "expenses_insert_own" on public.expenses for insert with check (auth.uid() = user_id);
-create policy "expenses_update_own" on public.expenses for update using (auth.uid() = user_id);
-create policy "expenses_delete_own" on public.expenses for delete using (auth.uid() = user_id);
-```
+✅ **Concluído** — RLS habilitado e políticas por tabela aplicadas.
 
 ---
 
 ### 2.3 Trigger para `updated_at`
 
-- [x] **Concluído** (função `set_updated_at` e triggers em `drivers`, `earnings`, `expenses`).
-
-> ℹ️ Recomendado. Garante que o campo `updated_at` seja atualizado automaticamente pelo banco, sem depender do Flutter.
-```sql
-create or replace function public.set_updated_at()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
-
-create trigger drivers_updated_at
-  before update on public.drivers for each row execute function public.set_updated_at();
-create trigger earnings_updated_at
-  before update on public.earnings for each row execute function public.set_updated_at();
-create trigger expenses_updated_at
-  before update on public.expenses for each row execute function public.set_updated_at();
-```
+✅ **Concluído** — função `set_updated_at` e triggers em `drivers`, `earnings`, `expenses`.
 
 ---
 
 ### 2.4 CHECK Constraints (opcional, recomendado para produção)
 
-- [x] **Concluído** (constraints de valor/rides/horas em earnings; value/liters em expenses; monthly_goal em drivers).
-
-Protege o banco de valores inválidos mesmo que o app envie dados incorretos.
-```sql
-alter table public.earnings add constraint earnings_value_non_negative check (value >= 0);
-alter table public.earnings add constraint earnings_rides_non_negative check (number_of_rides is null or number_of_rides >= 0);
-alter table public.earnings add constraint earnings_hours_non_negative check (hours_worked is null or hours_worked >= 0);
-
-alter table public.expenses add constraint expenses_value_non_negative check (value >= 0);
-alter table public.expenses add constraint expenses_liters_non_negative check (liters is null or liters >= 0);
-
-alter table public.drivers add constraint drivers_goal_non_negative check (monthly_goal >= 0);
-```
+✅ **Concluído** — constraints aplicadas em earnings, expenses e drivers.
 
 ---
 
 ### 2.5 Supabase Storage — Comprovantes de Despesas
 
-> ⚠️ Esta seção é necessária para o campo `receipt_image_path` funcionar corretamente.
-
-O campo `receipt_image_path` em `expenses` armazena o caminho do arquivo no bucket. O upload e download real são feitos via Supabase Storage.
-
-**Criar o bucket:**
-1. No Supabase, acesse **Storage → New Bucket**.
-2. Nome: `receipts`. Marcar como **Private** (acesso somente via políticas).
-
-**Políticas de Storage:**
-```sql
--- Usuário pode fazer upload na própria pasta
-create policy "receipts_upload_own"
-  on storage.objects for insert
-  with check (bucket_id = 'receipts' and auth.uid()::text = (storage.foldername(name))[1]);
-
--- Usuário pode visualizar os próprios arquivos
-create policy "receipts_select_own"
-  on storage.objects for select
-  using (bucket_id = 'receipts' and auth.uid()::text = (storage.foldername(name))[1]);
-
--- Usuário pode deletar os próprios arquivos
-create policy "receipts_delete_own"
-  on storage.objects for delete
-  using (bucket_id = 'receipts' and auth.uid()::text = (storage.foldername(name))[1]);
-```
-
-**Convenção de caminho dos arquivos:** `{user_id}/expenses/{expense_id}.jpg`
-
-> ℹ️ Usar o ID da despesa como nome do arquivo garante unicidade e facilita a substituição ao editar.
+✅ **Concluído** — bucket `receipts` criado e políticas de upload/select/delete configuradas. Convenção de path: `{user_id}/expenses/{expense_id}.jpg`.
 
 ---
 
@@ -399,6 +241,8 @@ Todas as colunas do banco seguem `snake_case`. Os campos nos modelos Dart seguem
 
 ### 6.5 Funções e Cálculos — Totais e Lucro Líquido
 
+✅ **RPC no Supabase:** concluído — `get_period_totals(p_start, p_end)` criada; `execute` revogado de `public` e concedido a `authenticated`.
+
 O app precisa de totais por período para dashboard, metas e resumos financeiros.
 
 | Cálculo | Descrição |
@@ -407,36 +251,11 @@ O app precisa de totais por período para dashboard, metas e resumos financeiros
 | Total de gastos | Soma de `expenses.value` no período filtrado |
 | Lucro líquido | Total de ganhos − total de gastos |
 
-**Métodos no serviço Flutter:**
+**Métodos no serviço Flutter (a implementar):**
 
-- `getTotalEarnings(userId, start, end)` — busca earnings do período e soma `value`.
-- `getTotalExpenses(userId, start, end)` — busca expenses do período e soma `value`.
-- `getNetProfit(userId, start, end)` — chama os dois acima em paralelo com `Future.wait` e subtrai.
-
-**RPC no Supabase (preferencial para produção):**
-
-Evita trazer todas as linhas para o Flutter e faz a soma diretamente no banco.
-
-> ⚠️ Após criar a função, revogar o acesso de `public` e conceder apenas para `authenticated`.
-```sql
-create or replace function public.get_period_totals(p_start date, p_end date)
-returns table (total_earnings numeric, total_expenses numeric, net_profit numeric)
-language sql
-security definer
-set search_path = public
-as $$
-  with
-    te as (select coalesce(sum(value), 0) as v from public.earnings
-           where user_id = auth.uid() and date >= p_start and date <= p_end),
-    tx as (select coalesce(sum(value), 0) as v from public.expenses
-           where user_id = auth.uid() and date >= p_start and date <= p_end)
-  select te.v, tx.v, te.v - tx.v from te, tx;
-$$;
-
--- Segurança: revogar de public e conceder apenas a authenticated
-revoke execute on function public.get_period_totals(date, date) from public;
-grant execute on function public.get_period_totals(date, date) to authenticated;
-```
+- `getTotalEarnings(userId, start, end)` — ou usar RPC `get_period_totals`.
+- `getTotalExpenses(userId, start, end)` — ou usar RPC.
+- `getNetProfit(userId, start, end)` — ou ler `net_profit` do RPC.
 
 No Flutter: `client.rpc('get_period_totals', params: {'p_start': '2025-01-01', 'p_end': '2025-01-31'})` e ler `total_earnings`, `total_expenses`, `net_profit`.
 
@@ -542,16 +361,9 @@ Criar um `SupabaseService` com métodos por entidade:
 
 ## 9. Checklist Final de Implementação
 
-**Itens já feitos:** Passos 1 a 4 — pré-requisitos, tabelas, RLS, triggers e CHECK constraints.
-
 ### Supabase (banco e infraestrutura)
 
-- [x] Criar tabelas `drivers`, `earnings`, `expenses` via SQL Editor.
-- [x] Habilitar RLS e aplicar políticas em todas as tabelas.
-- [x] Criar triggers de `updated_at`.
-- [x] Adicionar CHECK constraints.
-- [x] Criar bucket `receipts` no Storage e configurar políticas.
-- [x] (Opcional) Criar RPC `get_period_totals` e revogar `execute` de `public`.
+✅ **Concluído** — tabelas, RLS, triggers, CHECK constraints, bucket `receipts`, RPC `get_period_totals`.
 
 ### Flutter (app)
 
