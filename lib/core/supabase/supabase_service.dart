@@ -242,7 +242,7 @@ class SupabaseService {
   }
 
   // ---------------------------------------------------------------------------
-  // Storage (Receipts)
+  // Storage (Receipts & Avatars)
   // ---------------------------------------------------------------------------
 
   /// Faz upload de uma imagem para o bucket 'receipts'.
@@ -270,6 +270,32 @@ class SupabaseService {
   /// Deleta uma imagem do Storage.
   static Future<void> deleteReceiptImage(String path) async {
     await supabaseClient.storage.from('receipts').remove([path]);
+  }
+
+  /// Faz upload de uma imagem para o bucket 'avatars'.
+  static Future<String> uploadAvatar(List<int> bytes) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw Exception('Não autenticado');
+
+    final path = '$userId/avatar.jpg';
+    await supabaseClient.storage.from('avatars').uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+        );
+
+    // Retorna a URL pública com um timestamp para evitar cache
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    return '${supabaseClient.storage.from('avatars').getPublicUrl(path)}?t=$timestamp';
+  }
+
+  /// Deleta a imagem do avatar.
+  static Future<void> deleteAvatar() async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw Exception('Não autenticado');
+
+    final path = '$userId/avatar.jpg';
+    await supabaseClient.storage.from('avatars').remove([path]);
   }
 
   // ---------------------------------------------------------------------------
@@ -302,5 +328,28 @@ class SupabaseService {
       'totalExpenses': 0.0,
       'netProfit': 0.0,
     };
+  }
+
+  /// Chama a função RPC 'get_daily_totals' para obter totais diários.
+  static Future<List<Map<String, dynamic>>> getDailyTotals(
+      DateTime start, DateTime end) async {
+    final response = await supabaseClient.rpc(
+      'get_daily_totals',
+      params: {
+        'p_start': SupabaseFieldMapping.toSupabaseDate(start),
+        'p_end': SupabaseFieldMapping.toSupabaseDate(end),
+      },
+    );
+
+    if (response is List) {
+      return response.map((data) => {
+        'date': DateTime.parse(data['total_date'] as String),
+        'totalEarnings': (data['total_earnings'] as num?)?.toDouble() ?? 0.0,
+        'totalExpenses': (data['total_expenses'] as num?)?.toDouble() ?? 0.0,
+        'netProfit': (data['net_profit'] as num?)?.toDouble() ?? 0.0,
+      }).toList();
+    }
+
+    return [];
   }
 }

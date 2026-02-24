@@ -213,11 +213,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
+      String? avatarUrl = widget.driver?.avatarUrl;
+
+      // Se houver uma nova imagem, faz o upload
+      if (_imageBytes != null) {
+        avatarUrl = await SupabaseService.uploadAvatar(_imageBytes!);
+      }
+
       final goal = CurrencyFormatter.parse(_monthlyGoalController.text);
       
       final updatedDriver = Driver(
         name: _nameController.text.trim(),
         monthlyGoal: goal,
+        avatarUrl: avatarUrl,
         memberSince: widget.driver?.memberSince ?? DateTime.now(),
       );
 
@@ -231,7 +239,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: AppColors.success,
           ),
         );
-        context.pop();
+        context.pop(true); // Retorna true para indicar que houve alteração
       }
     } catch (e) {
       if (mounted) {

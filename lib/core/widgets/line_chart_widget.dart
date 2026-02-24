@@ -18,6 +18,13 @@ class LineChartWidget extends StatelessWidget {
     required this.title,
   });
 
+  double _calculateMaxY() {
+    double max = 100.0;
+    for (var p in earningsData) { if (p.y > max) max = p.y; }
+    for (var p in expensesData) { if (p.y > max) max = p.y; }
+    return (max * 1.2).ceilToDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -26,18 +33,20 @@ class LineChartWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTypography.h4,
-          ),
-          const SizedBox(height: AppSpacing.lg),
+          if (title.isNotEmpty) ...[
+            Text(
+              title,
+              style: AppTypography.h4,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           Expanded(
             child: LineChart(
               LineChartData(
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 200,
+                  horizontalInterval: _calculateMaxY() / 5,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: AppColors.textTertiary.withValues(alpha: 0.2),
@@ -58,6 +67,17 @@ class LineChartWidget extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
+                        // Se for 7 dias, mostra abreviação do dia
+                        if (earningsData.length == 7) {
+                           // Note: isso depende da ordem dos dados. 
+                           // Por simplicidade, vamos mostrar apenas o índice se não soubermos a data inicial.
+                           // Mas podemos melhorar isso passando as datas.
+                           return Text(
+                            'D${value.toInt() + 1}',
+                             style: AppTypography.caption,
+                           );
+                        }
+
                         if (value.toInt() % 5 == 0) {
                           return Text(
                             value.toInt().toString(),
@@ -88,9 +108,11 @@ class LineChartWidget extends StatelessWidget {
                   ),
                 ),
                 minX: 0,
-                maxX: 30,
+                maxX: (earningsData.length - 1).toDouble() > 0 
+                  ? (earningsData.length - 1).toDouble() 
+                  : 6.0,
                 minY: 0,
-                maxY: 1000,
+                maxY: _calculateMaxY(),
                 lineBarsData: [
                   // Linha de Ganhos (verde)
                   LineChartBarData(

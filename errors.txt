@@ -1,0 +1,10 @@
+Analyzing gestaodecontauber...                                  
+
+warning - The value of the local variable 'days' isn't used - lib\core\widgets\line_chart_widget.dart:72:34 - unused_local_variable
+warning - The declaration '_buildLegendItem' isn't referenced - lib\features\home\home_screen.dart:453:10 - unused_element
+  error - Expected an identifier - lib\features\onboarding\onboarding_screen.dart:319:38 - missing_identifier
+  error - Expected an identifier - lib\features\onboarding\onboarding_screen.dart:320:24 - missing_identifier
+  error - Undefined name 'CurrencyFormatter' - lib\features\profile\profile_screen.dart:227:18 - undefined_identifier
+  error - Undefined name 'CurrencyFormatter' - lib\features\profile\profile_screen.dart:234:18 - undefined_identifier
+  error - Undefined name 'CurrencyFormatter' - lib\features\profile\profile_screen.dart:241:18 - undefined_identifier
+

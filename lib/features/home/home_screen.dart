@@ -14,6 +14,7 @@ import '../../core/supabase/supabase_service.dart';
 import '../../shared/models/driver.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
+import '../../core/widgets/line_chart_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Atividades recentes reais
   List<dynamic> _recentActivities = [];
+  
+  // Dados do gráfico semanal
+  List<ChartDataPoint> _weeklyEarnings = [];
+  List<ChartDataPoint> _weeklyExpenses = [];
+  List<ChartDataPoint> _weeklyProfit = [];
 
   @override
   void initState() {
@@ -49,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadDriverData(),
       _loadTotals(),
       _loadRecentActivities(),
+      _loadWeeklyData(),
     ]);
     if (mounted) {
       setState(() => _isLoading = false);
@@ -116,6 +123,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+
+  Future<void> _loadWeeklyData() async {
+    try {
+      final now = DateTime.now();
+      final start = now.subtract(const Duration(days: 6));
+      final dailyTotals = await SupabaseService.getDailyTotals(start, now);
+      
+      if (mounted) {
+        setState(() {
+          _weeklyEarnings = [];
+          _weeklyExpenses = [];
+          _weeklyProfit = [];
+          
+          for (int i = 0; i < dailyTotals.length; i++) {
+            final data = dailyTotals[i];
+            _weeklyEarnings.add(ChartDataPoint(i.toDouble(), data['totalEarnings']));
+            _weeklyExpenses.add(ChartDataPoint(i.toDouble(), data['totalExpenses']));
+            _weeklyProfit.add(ChartDataPoint(i.toDouble(), data['netProfit']));
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar dados semanais: $e');
+    }
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -212,6 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           AppAvatar(
+            imageUrl: _driver!.avatarUrl,
             initials: _driver!.name.split(' ').map((n) => n[0]).take(2).join(),
             size: 50,
             onTap: () {
@@ -407,67 +440,11 @@ class _HomeScreenState extends State<HomeScreen> {
           style: AppTypography.h4,
         ),
         const SizedBox(height: AppSpacing.lg),
-        AppCard(
-          padding: AppSpacing.paddingXL,
-          child: Column(
-            children: [
-              // Placeholder para gráfico
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundDark.withAlpha((0.3 * 255).round()),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.bar_chart,
-                        size: 48,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Gráfico será implementado',
-                        style: AppTypography.caption,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Legenda
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildLegendItem(AppColors.earnings, 'Ganhos'),
-                  const SizedBox(width: AppSpacing.xl),
-                  _buildLegendItem(AppColors.expenses, 'Gastos'),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(
-          label,
-          style: AppTypography.caption,
+        LineChartWidget(
+          earningsData: _weeklyEarnings,
+          expensesData: _weeklyExpenses,
+          profitData: _weeklyProfit,
+          title: '', // Título já está no cabeçalho acima em _buildWeeklySummary
         ),
       ],
     );

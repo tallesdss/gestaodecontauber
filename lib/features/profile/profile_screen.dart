@@ -11,6 +11,7 @@ import '../../core/widgets/app_top_bar.dart';
 import '../../core/widgets/summary_card.dart';
 import '../../core/widgets/app_dialogs.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../core/supabase/auth_service.dart';
 
 import '../../core/supabase/supabase_service.dart';
@@ -27,10 +28,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Driver? _driver;
   bool _isLoading = true;
 
+  // Totais de vida
+  double _totalEarnings = 0.0;
+  double _totalExpenses = 0.0;
+  double _netProfit = 0.0;
+
   @override
   void initState() {
     super.initState();
-    _loadDriverData();
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _loadDriverData(),
+      _loadStatistics(),
+    ]);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadDriverData() async {
@@ -39,13 +56,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() {
           _driver = driver;
-          _isLoading = false;
         });
       }
     } catch (e) {
+      debugPrint('Erro ao carregar motorista: $e');
+    }
+  }
+
+  Future<void> _loadStatistics() async {
+    try {
+      // Estatísticas "de vida": do ano 2000 até hoje
+      final start = DateTime(2000);
+      final end = DateTime.now().add(const Duration(days: 365));
+      
+      final totals = await SupabaseService.getPeriodTotals(start, end);
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _totalEarnings = totals['totalEarnings'] ?? 0.0;
+          _totalExpenses = totals['totalExpenses'] ?? 0.0;
+          _netProfit = totals['netProfit'] ?? 0.0;
+        });
       }
+    } catch (e) {
+      debugPrint('Erro ao carregar estatísticas: $e');
     }
   }
 
@@ -66,7 +99,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text('Erro ao carregar perfil.', style: TextStyle(color: Colors.white)),
-              TextButton(onPressed: _loadDriverData, child: const Text('Tentar novamente')),
+              TextButton(onPressed: _loadAllData, child: const Text('Tentar novamente')),
             ],
           ),
         ),
@@ -79,27 +112,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: 'Perfil',
         showBackButton: true,
       ),
-      body: SingleChildScrollView(
-        padding: AppSpacing.paddingXL,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card do Usuário
-            _buildUserCard(context),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Estatísticas Rápidas
-            _buildStatisticsSection(),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Menu de Opções
-            _buildMenuSection(context),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Botão Sair
-            _buildLogoutButton(context),
-            const SizedBox(height: AppSpacing.xl),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _loadAllData,
+        child: SingleChildScrollView(
+          padding: AppSpacing.paddingXL,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card do Usuário
+              _buildUserCard(context),
+              const SizedBox(height: AppSpacing.xxl),
+  
+              // Estatísticas Rápidas
+              _buildStatisticsSection(),
+              const SizedBox(height: AppSpacing.xxl),
+  
+              // Menu de Opções
+              _buildMenuSection(context),
+              const SizedBox(height: AppSpacing.xxl),
+  
+              // Botão Sair
+              _buildLogoutButton(context),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
         ),
       ),
     );
@@ -114,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Stack(
             children: [
               AppAvatar(
+                imageUrl: _driver!.avatarUrl,
                 initials: _driver!.name.split(' ').map((n) => n[0]).take(2).join(),
                 size: 100,
               ),
@@ -124,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () async {
                   final result = await context.push('/profile/edit', extra: _driver);
                   if (result == true) {
-                    _loadDriverData();
+                    _loadAllData();
                   }
                 },
                   child: Container(
@@ -172,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               final result = await context.push('/profile/edit', extra: _driver);
               if (result == true) {
-                _loadDriverData();
+                _loadAllData();
               }
             },
             width: double.infinity,
@@ -183,26 +220,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatisticsSection() {
-    return const Row(
+    return Row(
       children: [
         SummaryCard(
           icon: Icons.trending_up,
           label: 'Total Ganho',
-          value: 'R\$ 45.000,00',
+          value: CurrencyFormatter.format(_totalEarnings),
           iconColor: AppColors.earnings,
         ),
-        SizedBox(width: AppSpacing.md),
+        const SizedBox(width: AppSpacing.md),
         SummaryCard(
           icon: Icons.trending_down,
           label: 'Total Gasto',
-          value: 'R\$ 12.000,00',
+          value: CurrencyFormatter.format(_totalExpenses),
           iconColor: AppColors.expenses,
         ),
-        SizedBox(width: AppSpacing.md),
+        const SizedBox(width: AppSpacing.md),
         SummaryCard(
           icon: Icons.account_balance_wallet,
           label: 'Lucro Total',
-          value: 'R\$ 33.000,00',
+          value: CurrencyFormatter.format(_netProfit),
           iconColor: AppColors.profit,
         ),
       ],

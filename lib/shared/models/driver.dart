@@ -3,6 +3,7 @@ class Driver {
   final String? userId;
   final String name;
   final double monthlyGoal;
+  final String? avatarUrl;
   final DateTime? memberSince;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -12,6 +13,7 @@ class Driver {
     this.userId,
     required this.name,
     required this.monthlyGoal,
+    this.avatarUrl,
     this.memberSince,
     this.createdAt,
     this.updatedAt,
@@ -23,6 +25,7 @@ class Driver {
       if (userId != null) 'userId': userId,
       'name': name,
       'monthlyGoal': monthlyGoal,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
       'memberSince': memberSince != null
           ? _dateOnlyIso8601(memberSince!)
           : null,
@@ -37,6 +40,7 @@ class Driver {
       userId: map['userId'] as String?,
       name: map['name'] as String,
       monthlyGoal: (map['monthlyGoal'] as num).toDouble(),
+      avatarUrl: map['avatarUrl'] as String?,
       memberSince: map['memberSince'] != null
           ? _parseDate(map['memberSince'] as String)
           : null,

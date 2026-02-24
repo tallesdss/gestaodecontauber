@@ -50,9 +50,9 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
-## � FASE 2: Núcleo e Identidade
+## 🏗️ FASE 2: Núcleo e Identidade [CONCLUÍDO]
 
-### [ ] 2.1. Home Screen (Dashboard)
+### [x] 2.1. Home Screen (Dashboard)
 *   **Funções Necessárias:**
     *   `_loadDriverData()`: Busca nome e dados do motorista.
     *   `_loadTotals()`: Busca totais do dia (Ganhos, Gastos, Lucro) via RPC.
@@ -74,7 +74,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   **Item de Atividade Recente:** Navega para os Detalhes do registro.
     *   **Bottom Nav:** Navegação entre Home, Ganhos, Gastos, Relatórios e Perfil.
 
-### [ ] 2.2. Profile Screen
+### [x] 2.2. Profile Screen
 *   **Funções Necessárias:**
     *   `_loadDriverData()`: Dados do perfil.
     *   Resumo de estatísticas globais (Total Vida).
@@ -89,7 +89,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   **Tema:** Alternar entre Claro/Escuro (A implementar).
     *   **Sair:** Logout completo.
 
-### [ ] 2.3. Edit Profile Screen
+### [x] 2.3. Edit Profile Screen
 *   **Funções Necessárias:**
     *   Atualização de nome e meta mensal.
     *   Alteração de foto (Storage).

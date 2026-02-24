@@ -316,8 +316,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             // Campo: Meta mensal
             AppTextField(
-              label: 'Meta mensal (R$)',
-              hint: 'R$ 0,00',
+              label: 'Meta mensal (R\$)',
+              hint: 'R\$ 0,00',
               controller: _goalController,
               keyboardType: TextInputType.number,
               prefixIcon: Icons.flag,
