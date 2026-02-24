@@ -49,7 +49,7 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | ✅ |
 | 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | ✅ |
 | 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | ✅ |
-| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | |
+| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | 🔶 *parcial* (mapeamento em `SupabaseFieldMapping`; faltam funções centralizadas) |
 | 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 | |
 | 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 | |
 | 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 | |
@@ -367,9 +367,9 @@ Criar um `SupabaseService` com métodos por entidade:
 
 ### Flutter (app)
 
-- [ ] Adicionar `supabase_flutter` e inicializar no `main.dart` com variáveis de ambiente.
-- [ ] Implementar camada de conversão `snake_case ↔ camelCase`.
-- [ ] Ajustar modelos Dart (`id`, `userId`, datas, `receiptImagePath`).
+- [x] Adicionar `supabase_flutter` e inicializar no `main.dart` com variáveis de ambiente.
+- [ ] Implementar camada de conversão `snake_case ↔ camelCase` (mapeamento em `SupabaseFieldMapping`; faltam funções `toSupabaseMap`/`fromSupabaseMap` centralizadas).
+- [x] Ajustar modelos Dart (`id`, `userId`, datas, `receiptImagePath`).
 - [ ] Implementar Auth (registro, login, logout, tratamento de sessão).
 - [ ] Implementar CRUD de Drivers (upsert para perfil único).
 - [ ] Implementar CRUD de Earnings (com paginação e filtro por período).
