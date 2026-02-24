@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
@@ -28,6 +29,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
   ExpenseCategory _selectedCategory = ExpenseCategory.all;
   bool _isLoading = true;
   final List<Expense> _expenses = [];
+  DateTime? _customStart;
+  DateTime? _customEnd;
 
   @override
   void initState() {
@@ -53,7 +56,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
         start = DateTime(now.year, now.month, 1);
         break;
       case FilterPeriod.custom:
-        // TODO: Implementar custom range
+        start = _customStart;
+        end = _customEnd;
         break;
     }
 
@@ -497,11 +501,37 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Personalizado',
                 icon: Icons.calendar_today,
                 isSelected: _selectedPeriod == FilterPeriod.custom,
-                onTap: () {
-                  setState(() {
-                    _selectedPeriod = FilterPeriod.custom;
-                  });
-                  // TODO: Abrir DateRangePicker
+                onTap: () async {
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                    initialDateRange: _selectedPeriod == FilterPeriod.custom
+                        ? DateTimeRange(start: _customStart ?? DateTime.now(), end: _customEnd ?? DateTime.now())
+                        : null,
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.dark(
+                            primary: AppColors.primary,
+                            onPrimary: AppColors.textPrimary,
+                            surface: AppColors.surface,
+                            onSurface: AppColors.textPrimary,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  
+                  if (picked != null) {
+                    setState(() {
+                      _selectedPeriod = FilterPeriod.custom;
+                      _customStart = picked.start;
+                      _customEnd = picked.end;
+                    });
+                    _loadExpenses();
+                  }
                 },
               ),
             ],
@@ -683,28 +713,28 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
           padding: AppSpacing.paddingXL,
           child: Column(
             children: [
-              // Placeholder para gráfico de pizza/donut
-              Container(
+              // Gráfico de pizza/donut real
+              SizedBox(
                 height: 200,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundDark.withAlpha((0.3 * 255).round()),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.pie_chart,
-                        size: 48,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Gráfico será implementado',
-                        style: AppTypography.caption,
-                      ),
-                    ],
+                child: PieChart(
+                  PieChartData(
+                    sectionsSpace: 4,
+                    centerSpaceRadius: 60,
+                    startDegreeOffset: -90,
+                    sections: expensesByCategory.entries.map((entry) {
+                      final category = entry.key;
+                      final value = entry.value;
+                      final color = _getCategoryColor(category);
+                      
+                      return PieChartSectionData(
+                        color: color,
+                        value: value,
+                        title: '', // Título vazio para não sobrepor, usamos a legenda abaixo
+                        radius: 20,
+                        showTitle: false,
+                        badgeWidget: null,
+                      );
+                    }).toList(),
                   ),
                 ),
               ),

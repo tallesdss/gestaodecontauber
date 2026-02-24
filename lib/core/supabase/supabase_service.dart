@@ -352,4 +352,25 @@ class SupabaseService {
 
     return [];
   }
+
+  /// Chama a função RPC 'get_expenses_by_category' para obter gastos por categoria.
+  static Future<List<Map<String, dynamic>>> getExpensesByCategory(
+      DateTime start, DateTime end) async {
+    final response = await supabaseClient.rpc(
+      'get_expenses_by_category',
+      params: {
+        'p_start': SupabaseFieldMapping.toSupabaseDate(start),
+        'p_end': SupabaseFieldMapping.toSupabaseDate(end),
+      },
+    );
+
+    if (response is List) {
+      return response.map((data) => {
+        'category': data['category'] as String,
+        'totalValue': (data['total_value'] as num?)?.toDouble() ?? 0.0,
+      }).toList();
+    }
+
+    return [];
+  }
 }

@@ -55,12 +55,13 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 ### [x] 2.1. Home Screen (Dashboard)
 *   **Funções Necessárias:**
     *   `_loadDriverData()`: Busca nome e dados do motorista.
-    *   `_loadTotals()`: Busca totais do dia (Ganhos, Gastos, Lucro) via RPC.
+    *   `_loadTotals()`: Busca totais dos últimos 7 dias (Ganhos, Gastos, Lucro) via RPC.
     *   `_loadRecentActivities()`: Busca os 5 registros mais recentes (Ganhos + Gastos).
+    *   `_setupRealtimeSubscriptions()`: Atualiza os dados automaticamente quando houver mudanças no banco (Tempo Real).
 *   **Dados Dinâmicos:**
     *   `Saudação`: "Bom dia/tarde/noite, [Nome]" carregado de `drivers.name`.
-    *   `Cards de Resumo`: Ganhos, Gastos e Lucro do dia (resultados reais da RPC `get_period_totals`).
-    *   `Atividade Recente`: Lista mista com ícones dinâmicos (Moeda para ganho, Categoria para gasto).
+    *   `Cards de Resumo`: Ganhos, Gastos e Lucro dos últimos 7 dias (resultados reais e em tempo real).
+    *   `Atividade Recente`: Lista mista com ícones dinâmicos, atualizada em tempo real.
     *   `Avatar`: Iniciais baseadas no nome do motorista vindo do banco.
 *   **Ações de Botões:**
     *   **Avatar:** Navega para Perfil.
@@ -137,9 +138,9 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
-## 💸 FASE 4: Gestão de Gastos e Arquivos
+## 🏗️ FASE 4: Gestão de Gastos e Arquivos [CONCLUÍDO]
 
-### [ ] 4.1. Expenses List Screen
+### [x] 4.1. Expenses List Screen
 *   **Funções Necessárias:**
     *   `_loadExpenses(period, category)`: Lista gastos com filtros duplos.
     *   Gráfico de pizza dinâmico por categoria.
@@ -155,7 +156,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   **Chips de Categoria:** Atualiza lista.
     *   **Card de Gasto:** Abre tela de detalhes.
 
-### [ ] 4.2. Add Expense Screen
+### [x] 4.2. Add Expense Screen
 *   **Funções Necessárias:**
     *   Upload de imagem para Supabase Storage (Recibos).
     *   Gerenciamento de campos condicionais (ex: Litros apenas para Combustível).
@@ -171,9 +172,9 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
-## 🔍 FASE 5: Inteligência e Detalhes
+## 🔍 FASE 5: Inteligência e Detalhes [CONCLUÍDO]
 
-### [ ] 5.1. Detail Screen (Geral)
+### [x] 5.1. Detail Screen (Geral)
 *   **Funções Necessárias:**
     *   Exibição de todos os campos do modelo (Earning ou Expense).
     *   `_loadSignedUrl()`: Gera URL temporária para ver o recibo.
@@ -187,7 +188,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   **Botão Primário Editar:** Mesma função do ícone.
     *   **Botão Secundário Excluir:** Mesma função do ícone.
 
-### [ ] 5.2. Reports Screen
+### [x] 5.2. Reports Screen
 *   **Funções Necessárias:**
     *   Integração com `fl_chart` para gráficos de linha e pizza.
     *   Métricas: Média/Dia, Gasto/Dia, Dias Ativos, Melhor Dia.

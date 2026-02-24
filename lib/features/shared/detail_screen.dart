@@ -286,6 +286,16 @@ class _DetailScreenState extends State<DetailScreen> {
               icon: Icons.note,
               label: 'Observações',
               value: isEarning ? widget.earning!.notes! : widget.expense!.notes!,
+            ),
+          const SizedBox(height: AppSpacing.lg),
+          if ((isEarning && widget.earning!.createdAt != null) ||
+              (!isEarning && widget.expense!.createdAt != null))
+            _buildDetailItem(
+              icon: Icons.history,
+              label: 'Registrado em',
+              value: DateFormatter.formatDateTime(
+                isEarning ? widget.earning!.createdAt!.toLocal() : widget.expense!.createdAt!.toLocal(),
+              ),
               isLast: true,
             ),
         ],
@@ -344,7 +354,11 @@ class _DetailScreenState extends State<DetailScreen> {
           GestureDetector(
             onTap: () {
               if (_signedUrl != null) {
-                // TODO: Abrir imagem em tela cheia
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImageViewer(imageUrl: _signedUrl!),
+                  ),
+                );
               }
             },
             child: ClipRRect(
@@ -570,6 +584,34 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class FullScreenImageViewer extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageViewer({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            placeholder: (context, url) => const CircularProgressIndicator(),
+            errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+          ),
+        ),
       ),
     );
   }

@@ -9,12 +9,12 @@ import '../../core/widgets/line_chart_widget.dart';
 import '../../core/widgets/pie_chart_widget.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/theme/app_radius.dart';
+import '../../core/supabase/supabase_service.dart';
 
 enum ReportPeriod {
   today,
   thisWeek,
   thisMonth,
-  custom,
 }
 
 class ReportsScreen extends StatefulWidget {
@@ -26,69 +26,146 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   ReportPeriod _selectedPeriod = ReportPeriod.thisMonth;
+  bool _isLoading = true;
 
-  // Dados mock - serão substituídos por dados reais depois
-  final double _totalEarnings = 2450.0;
-  final double _totalExpenses = 850.0;
-  double get _totalProfit => _totalEarnings - _totalExpenses;
+  // Estatísticas Reais
+  double _totalEarnings = 0.0;
+  double _totalExpenses = 0.0;
+  double _netProfit = 0.0;
+  
+  // Métricas Adicionais
+  double _averageDailyEarnings = 0.0;
+  double _averageDailyExpenses = 0.0;
+  int _daysWorked = 0;
+  double _bestDayValue = 0.0;
 
-  // Métricas adicionais
-  final double _averageDailyEarnings = 350.0;
-  final double _averageDailyExpenses = 85.0;
-  final int _daysWorked = 22;
-  final double _bestDay = 520.0;
+  // Dados para Gráficos
+  List<ChartDataPoint> _earningsChartData = [];
+  List<ChartDataPoint> _expensesChartData = [];
+  List<ChartDataPoint> _profitChartData = [];
+  List<CategoryExpenseData> _expensesByCategory = [];
 
-  // Dados para gráfico de linhas (mock - últimos 30 dias)
-  List<ChartDataPoint> get _earningsChartData {
-    return List.generate(30, (index) {
-      return ChartDataPoint(
-        index.toDouble(),
-        200.0 + (index * 10.0) + (index % 5) * 50.0,
-      );
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
   }
 
-  List<ChartDataPoint> get _expensesChartData {
-    return List.generate(30, (index) {
-      return ChartDataPoint(
-        index.toDouble(),
-        50.0 + (index * 2.0) + (index % 3) * 20.0,
-      );
-    });
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final now = DateTime.now();
+      DateTime start;
+      DateTime end = now;
+
+      switch (_selectedPeriod) {
+        case ReportPeriod.today:
+          start = DateTime(now.year, now.month, now.day);
+          break;
+        case ReportPeriod.thisWeek:
+          // Início da semana (segunda-feira)
+          start = now.subtract(Duration(days: now.weekday - 1));
+          start = DateTime(start.year, start.month, start.day);
+          break;
+        case ReportPeriod.thisMonth:
+          start = DateTime(now.year, now.month, 1);
+          break;
+      }
+
+      // 1. Totais do Período
+      final totals = await SupabaseService.getPeriodTotals(start, end);
+      
+      // 2. Totais Diários (para métricas e gráficos)
+      // Se for apenas o dia de hoje, pegamos dos últimos 7 dias para o gráfico fazer sentido
+      // ou apenas hoje. Mas o gráfico de linha costuma mostrar evolução.
+      // Vou pegar sempre pelo menos 7 dias ou o período selecionado.
+      final chartStart = _selectedPeriod == ReportPeriod.today 
+          ? now.subtract(const Duration(days: 6)) 
+          : start;
+      
+      final dailyTotals = await SupabaseService.getDailyTotals(chartStart, end);
+      
+      // 3. Gastos por Categoria
+      final categoryData = await SupabaseService.getExpensesByCategory(start, end);
+
+      if (mounted) {
+        setState(() {
+          _totalEarnings = totals['totalEarnings'] ?? 0.0;
+          _totalExpenses = totals['totalExpenses'] ?? 0.0;
+          _netProfit = totals['netProfit'] ?? 0.0;
+
+          // Processar dados do gráfico
+          _earningsChartData = [];
+          _expensesChartData = [];
+          _profitChartData = [];
+          
+          double totalForAverage = 0;
+          double totalExpensesForAverage = 0;
+          int daysWithEarnings = 0;
+          double bestValue = 0;
+
+          for (int i = 0; i < dailyTotals.length; i++) {
+            final day = dailyTotals[i];
+            final e = day['totalEarnings'] as double;
+            final x = day['totalExpenses'] as double;
+            final p = day['netProfit'] as double;
+
+            _earningsChartData.add(ChartDataPoint(i.toDouble(), e));
+            _expensesChartData.add(ChartDataPoint(i.toDouble(), x));
+            _profitChartData.add(ChartDataPoint(i.toDouble(), p));
+
+            if (e > 0) {
+              daysWithEarnings++;
+              totalForAverage += e;
+              if (e > bestValue) bestValue = e;
+            }
+            totalExpensesForAverage += x;
+          }
+
+          _daysWorked = daysWithEarnings;
+          _averageDailyEarnings = daysWithEarnings > 0 ? totalForAverage / daysWithEarnings : 0;
+          _averageDailyExpenses = dailyTotals.isNotEmpty ? totalExpensesForAverage / dailyTotals.length : 0;
+          _bestDayValue = bestValue;
+
+          // Processar gastos por categoria
+          _expensesByCategory = categoryData.map((c) {
+            return CategoryExpenseData(
+              label: c['category'],
+              value: c['totalValue'],
+              color: _getCategoryColor(c['category']),
+            );
+          }).toList();
+
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar relatórios: $e')),
+        );
+      }
+    }
   }
 
-  List<ChartDataPoint> get _profitChartData {
-    return List.generate(30, (index) {
-      final earnings = 200.0 + (index * 10.0) + (index % 5) * 50.0;
-      final expenses = 50.0 + (index * 2.0) + (index % 3) * 20.0;
-      return ChartDataPoint(index.toDouble(), earnings - expenses);
-    });
-  }
-
-  // Dados para gráfico de pizza (gastos por categoria)
-  List<CategoryExpenseData> get _expensesByCategory {
-    return [
-      CategoryExpenseData(
-        label: 'Combustível',
-        value: 500.0,
-        color: AppColors.fuel,
-      ),
-      CategoryExpenseData(
-        label: 'Manutenção',
-        value: 200.0,
-        color: AppColors.maintenance,
-      ),
-      CategoryExpenseData(
-        label: 'Lavagem',
-        value: 80.0,
-        color: AppColors.accent,
-      ),
-      CategoryExpenseData(
-        label: 'Outros',
-        value: 70.0,
-        color: AppColors.textTertiary,
-      ),
-    ];
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'combustível':
+      case 'fuel':
+        return AppColors.fuel;
+      case 'manutenção':
+      case 'maintenance':
+        return AppColors.maintenance;
+      case 'lavagem':
+      case 'car_wash':
+        return AppColors.accent;
+      case 'estacionamento':
+        return AppColors.warning;
+      default:
+        return AppColors.textTertiary;
+    }
   }
 
   String _getPeriodLabel(ReportPeriod period) {
@@ -99,8 +176,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
         return 'Esta Semana';
       case ReportPeriod.thisMonth:
         return 'Este Mês';
-      case ReportPeriod.custom:
-        return 'Personalizado';
     }
   }
 
@@ -125,26 +200,38 @@ class _ReportsScreenState extends State<ReportsScreen> {
               _buildHeader(),
               // Conteúdo
               Expanded(
-                child: SingleChildScrollView(
-                  padding: AppSpacing.paddingLG,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Cards de Resumo
-                      _buildSummaryCards(),
-                      const SizedBox(height: AppSpacing.xl),
-                      // Gráfico Principal
-                      _buildMainChart(),
-                      const SizedBox(height: AppSpacing.xl),
-                      // Métricas Adicionais
-                      _buildAdditionalMetrics(),
-                      const SizedBox(height: AppSpacing.xl),
-                      // Gráfico de Gastos por Categoria
-                      _buildExpensesByCategoryChart(),
-                      const SizedBox(height: AppSpacing.xxxl),
-                    ],
-                  ),
-                ),
+                child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: SingleChildScrollView(
+                        padding: AppSpacing.paddingLG,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Cards de Resumo
+                            _buildSummaryCards(),
+                            const SizedBox(height: AppSpacing.xl),
+                            // Gráfico Principal
+                            _buildMainChart(),
+                            const SizedBox(height: AppSpacing.xl),
+                            // Métricas Adicionais
+                            _buildAdditionalMetrics(),
+                            const SizedBox(height: AppSpacing.xl),
+                            // Gráfico de Gastos por Categoria
+                            if (_expensesByCategory.isNotEmpty) ...[
+                              _buildExpensesByCategoryChart(),
+                              const SizedBox(height: AppSpacing.xxxl),
+                            ] else if (_totalExpenses > 0)
+                              const Padding(
+                                padding: EdgeInsets.all(AppSpacing.lg),
+                                child: Center(child: Text('Sem dados de categorias disponíveis')),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
               ),
             ],
           ),
@@ -195,6 +282,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   setState(() {
                     _selectedPeriod = value;
                   });
+                  _loadData();
                 }
               },
             ),
@@ -207,31 +295,34 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildSummaryCards() {
     return Row(
       children: [
-        // Card 1: Total de Ganhos
-        SummaryCard(
-          icon: Icons.trending_up,
-          label: 'Total de Ganhos',
-          value: CurrencyFormatter.format(_totalEarnings),
-          iconColor: AppColors.earnings,
-          onTap: () {},
+        Expanded(
+          child: SummaryCard(
+            icon: Icons.trending_up,
+            label: 'Ganhos',
+            value: CurrencyFormatter.format(_totalEarnings),
+            iconColor: AppColors.earnings,
+            onTap: () {},
+          ),
         ),
         const SizedBox(width: AppSpacing.md),
-        // Card 2: Total de Gastos
-        SummaryCard(
-          icon: Icons.trending_down,
-          label: 'Total de Gastos',
-          value: CurrencyFormatter.format(_totalExpenses),
-          iconColor: AppColors.expenses,
-          onTap: () {},
+        Expanded(
+          child: SummaryCard(
+            icon: Icons.trending_down,
+            label: 'Gastos',
+            value: CurrencyFormatter.format(_totalExpenses),
+            iconColor: AppColors.expenses,
+            onTap: () {},
+          ),
         ),
         const SizedBox(width: AppSpacing.md),
-        // Card 3: Lucro Líquido
-        SummaryCard(
-          icon: Icons.account_balance_wallet,
-          label: 'Lucro Líquido',
-          value: CurrencyFormatter.format(_totalProfit),
-          iconColor: _totalProfit >= 0 ? AppColors.profit : AppColors.loss,
-          onTap: () {},
+        Expanded(
+          child: SummaryCard(
+            icon: Icons.account_balance_wallet,
+            label: 'Lucro',
+            value: CurrencyFormatter.format(_netProfit),
+            iconColor: _netProfit >= 0 ? AppColors.profit : AppColors.loss,
+            onTap: () {},
+          ),
         ),
       ],
     );
@@ -241,7 +332,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return AppCard(
       padding: AppSpacing.paddingLG,
       child: LineChartWidget(
-        title: 'Evolução Mensal',
+        title: _selectedPeriod == ReportPeriod.today 
+            ? 'Últimos 7 dias' 
+            : 'Evolução no Período',
         earningsData: _earningsChartData,
         expensesData: _expensesChartData,
         profitData: _profitChartData,
@@ -258,7 +351,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           style: AppTypography.h4,
         ),
         const SizedBox(height: AppSpacing.lg),
-        // Grid 2x2
         Row(
           children: [
             Expanded(
@@ -296,7 +388,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               child: StatCard(
                 icon: Icons.star,
                 label: 'Melhor Dia',
-                value: CurrencyFormatter.format(_bestDay),
+                value: CurrencyFormatter.format(_bestDayValue),
                 iconColor: AppColors.warning,
               ),
             ),
@@ -341,15 +433,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            // Handle
-            Container(
-              width: 40,
-              height: 4,
-              decoration: const BoxDecoration(
-                color: AppColors.textTertiary,
-                borderRadius: AppRadius.borderRadiusRound,
+              Container(
+                width: 40,
+                height: 4,
+                decoration: const BoxDecoration(
+                  color: AppColors.textTertiary,
+                  borderRadius: AppRadius.borderRadiusRound,
+                ),
               ),
-            ),
               const SizedBox(height: AppSpacing.xxl),
               Text(
                 'Exportar Relatório',
@@ -361,7 +452,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 label: 'Exportar PDF',
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implementar exportação PDF
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -370,7 +460,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 label: 'Exportar Excel',
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implementar exportação Excel
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -379,7 +468,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 label: 'Compartilhar',
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implementar compartilhamento
                 },
               ),
               const SizedBox(height: AppSpacing.xxl),

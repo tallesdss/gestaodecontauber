@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -11,6 +13,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_app_client.dart'; // Import para o client
 import '../../shared/models/driver.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
@@ -30,10 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Dados do motorista vindos do Supabase
   Driver? _driver;
   
-  // Totais reais vindos do Supabase (RPC)
-  double _todayEarnings = 0.0;
-  double _todayExpenses = 0.0;
-  double _todayProfit = 0.0;
+  // Totais reais vindos do Supabase (RPC) - Período de 7 dias
+  double _periodEarnings = 0.0;
+  double _periodExpenses = 0.0;
+  double _periodProfit = 0.0;
   
   // Atividades recentes reais
   List<dynamic> _recentActivities = [];
@@ -43,10 +46,69 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ChartDataPoint> _weeklyExpenses = [];
   List<ChartDataPoint> _weeklyProfit = [];
 
+  // Subscription para realtime
+  RealtimeChannel? _earningsSubscription;
+  RealtimeChannel? _expensesSubscription;
+
   @override
   void initState() {
     super.initState();
     _loadAllData();
+    _setupRealtimeSubscriptions();
+  }
+
+  @override
+  void dispose() {
+    _earningsSubscription?.unsubscribe();
+    _expensesSubscription?.unsubscribe();
+    super.dispose();
+  }
+
+  void _setupRealtimeSubscriptions() {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) return;
+
+    // Escuta mudanças na tabela de ganhos
+    _earningsSubscription = supabaseClient
+        .channel('public:earnings')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'earnings',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            debugPrint('Mudança em earnings detectada: ${payload.eventType}');
+            _loadTotals();
+            _loadRecentActivities();
+            _loadWeeklyData();
+          },
+        )
+        .subscribe();
+
+    // Escuta mudanças na tabela de despesas
+    _expensesSubscription = supabaseClient
+        .channel('public:expenses')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'expenses',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            debugPrint('Mudança em expenses detectada: ${payload.eventType}');
+            _loadTotals();
+            _loadRecentActivities();
+            _loadWeeklyData();
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _loadAllData() async {
@@ -78,15 +140,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadTotals() async {
     try {
       final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final endOfDay = startOfDay.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+      // Período de 7 dias (hoje inclusive e os 6 anteriores)
+      final start = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+      final end = DateTime(now.year, now.month, now.day, 23, 59, 59);
       
-      final totals = await SupabaseService.getPeriodTotals(startOfDay, endOfDay);
+      final totals = await SupabaseService.getPeriodTotals(start, end);
       if (mounted) {
         setState(() {
-          _todayEarnings = totals['totalEarnings'] ?? 0.0;
-          _todayExpenses = totals['totalExpenses'] ?? 0.0;
-          _todayProfit = totals['netProfit'] ?? 0.0;
+          _periodEarnings = totals['totalEarnings'] ?? 0.0;
+          _periodExpenses = totals['totalExpenses'] ?? 0.0;
+          _periodProfit = totals['netProfit'] ?? 0.0;
         });
       }
     } catch (e) {
@@ -287,12 +350,12 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Hoje',
+          'Últimos 7 dias',
           style: AppTypography.h4,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          DateFormatter.formatFullDate(today),
+          'Resumo de ${DateFormatter.formatFullDate(today.subtract(const Duration(days: 6)))} até hoje',
           style: AppTypography.caption,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -301,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SummaryCard(
               icon: Icons.attach_money,
               label: 'Ganhos',
-              value: CurrencyFormatter.format(_todayEarnings),
+              value: CurrencyFormatter.format(_periodEarnings),
               iconColor: AppColors.earnings,
               onTap: () {
                 context.push('/earnings');
@@ -311,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SummaryCard(
               icon: Icons.shopping_cart,
               label: 'Gastos',
-              value: CurrencyFormatter.format(_todayExpenses),
+              value: CurrencyFormatter.format(_periodExpenses),
               iconColor: AppColors.expenses,
               onTap: () {
                 context.push('/expenses');
@@ -319,10 +382,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: AppSpacing.md),
             SummaryCard(
-              icon: _todayProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+              icon: _periodProfit >= 0 ? Icons.trending_up : Icons.trending_down,
               label: 'Lucro',
-              value: CurrencyFormatter.format(_todayProfit),
-              iconColor: _todayProfit >= 0 ? AppColors.profit : AppColors.loss,
+              value: CurrencyFormatter.format(_periodProfit),
+              iconColor: _periodProfit >= 0 ? AppColors.profit : AppColors.loss,
               onTap: () {
                 context.push('/reports');
               },
