@@ -101,9 +101,9 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
-## 💰 FASE 3: Gestão de Ganhos
+## 💰 FASE 3: Gestão de Ganhos [CONCLUÍDO]
 
-### [ ] 3.1. Earnings List Screen
+### [x] 3.1. Earnings List Screen
 *   **Funções Necessárias:**
     *   `_loadEarnings(period)`: Lista ganhos filtrados por período.
     *   Cálculo dinâmico do Total e Média Diária do período filtrado.
@@ -121,7 +121,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   **Botão "Três Pontinhos":** Abre Menu de Ações (Ver, Editar, Excluir).
     *   **Excluir (Dialog):** Chama `SupabaseService.deleteEarning`.
 
-### [ ] 3.2. Add Earning Screen
+### [x] 3.2. Add Earning Screen
 *   **Funções Necessárias:**
     *   Suporte a Modo Criação e Modo Edição.
     *   Formatação de moeda em tempo real.

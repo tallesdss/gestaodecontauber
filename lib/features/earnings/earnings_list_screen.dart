@@ -83,8 +83,12 @@ class _EarningsListScreenState extends State<EarningsListScreen> {
 
   double get _averagePerDay {
     if (_filteredEarnings.isEmpty) return 0.0;
-    final days = _filteredEarnings.map((e) => e.date.day).toSet().length;
-    return days > 0 ? _totalEarnings / days : 0.0;
+    // Pega apenas o componente de data (ano, mês, dia) para contar dias únicos trabalhados
+    final uniqueDays = _filteredEarnings
+        .map((e) => DateTime(e.date.year, e.date.month, e.date.day))
+        .toSet()
+        .length;
+    return uniqueDays > 0 ? _totalEarnings / uniqueDays : 0.0;
   }
 
   Map<DateTime, List<Earning>> get _groupedEarnings {
