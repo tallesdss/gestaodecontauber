@@ -17,7 +17,8 @@ import '../../core/supabase/supabase_error_handler.dart';
 import '../../shared/models/earning.dart';
 
 class AddEarningScreen extends StatefulWidget {
-  const AddEarningScreen({super.key});
+  final Earning? initialEarning;
+  const AddEarningScreen({super.key, this.initialEarning});
 
   @override
   State<AddEarningScreen> createState() => _AddEarningScreenState();
@@ -25,16 +26,37 @@ class AddEarningScreen extends StatefulWidget {
 
 class _AddEarningScreenState extends State<AddEarningScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _valueController = TextEditingController();
-  final _numberOfRidesController = TextEditingController();
-  final _hoursWorkedController = TextEditingController();
-  final _notesController = TextEditingController();
+  late final TextEditingController _valueController;
+  late final TextEditingController _numberOfRidesController;
+  late final TextEditingController _hoursWorkedController;
+  late final TextEditingController _notesController;
 
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
   String? _selectedPlatform;
   bool _isLoading = false;
 
   final List<String> _platforms = ['Uber', '99', 'InDrive', 'Outros'];
+
+  @override
+  void initState() {
+    super.initState();
+    final earning = widget.initialEarning;
+    
+    _valueController = TextEditingController(
+      text: earning != null ? CurrencyFormatter.format(earning.value) : '',
+    );
+    _numberOfRidesController = TextEditingController(
+      text: earning?.numberOfRides?.toString() ?? '',
+    );
+    _hoursWorkedController = TextEditingController(
+      text: earning?.hoursWorked?.toString().replaceAll('.', ',') ?? '',
+    );
+    _notesController = TextEditingController(
+      text: earning?.notes ?? '',
+    );
+    _selectedDate = earning?.date ?? DateTime.now();
+    _selectedPlatform = earning?.platform;
+  }
 
   @override
   void dispose() {
@@ -112,7 +134,7 @@ class _AddEarningScreenState extends State<AddEarningScreen> {
 
       // Criar o ganho
       final earning = Earning(
-        id: const Uuid().v4(),
+        id: widget.initialEarning?.id ?? const Uuid().v4(),
         date: _selectedDate,
         value: value,
         platform: _selectedPlatform,
@@ -126,13 +148,21 @@ class _AddEarningScreenState extends State<AddEarningScreen> {
       );
 
       // Salvar no Supabase
-      await SupabaseService.createEarning(earning);
+      if (widget.initialEarning != null) {
+        await SupabaseService.updateEarning(earning);
+      } else {
+        await SupabaseService.createEarning(earning);
+      }
 
       if (mounted) {
-        context.pop();
+        context.pop(true); // Retorna true para sinalizar que houve alteração
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ganho adicionado com sucesso!'),
+          SnackBar(
+            content: Text(
+              widget.initialEarning != null
+                  ? 'Ganho atualizado com sucesso!'
+                  : 'Ganho adicionado com sucesso!',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -174,7 +204,7 @@ class _AddEarningScreenState extends State<AddEarningScreen> {
             children: [
               // Header
               AppTopBar(
-                title: 'Adicionar Ganho',
+                title: widget.initialEarning != null ? 'Editar Ganho' : 'Adicionar Ganho',
                 showBackButton: true,
                 actions: [
                   IconButton(

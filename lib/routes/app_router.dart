@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../core/supabase/auth_service.dart';
-import '../core/supabase/supabase_app_client.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/home/home_screen.dart';
@@ -75,7 +74,10 @@ class AppRouter {
       ),
       GoRoute(
         path: '/earnings/add',
-        builder: (context, state) => const AddEarningScreen(),
+        builder: (context, state) {
+          final initialEarning = state.extra as Earning?;
+          return AddEarningScreen(initialEarning: initialEarning);
+        },
       ),
       GoRoute(
         path: '/expenses',
@@ -83,7 +85,10 @@ class AppRouter {
       ),
       GoRoute(
         path: '/expenses/add',
-        builder: (context, state) => const AddExpenseScreen(),
+        builder: (context, state) {
+          final initialExpense = state.extra as Expense?;
+          return AddExpenseScreen(initialExpense: initialExpense);
+        },
       ),
       GoRoute(
         path: '/detail/earning/:id',

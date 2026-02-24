@@ -54,8 +54,8 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 | 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 | ✅ |
 | 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 | ✅ |
 | 14 | Flutter: CRUD de Expenses no serviço e nas telas (com paginação, filtro por período e categoria) | § 6, § 7.4 | ✅ |
-| 15 | Flutter: integrar upload/download de comprovantes via Supabase Storage | § 6.6 | |
-| 16 | Flutter: funções de cálculo — total ganhos, total gastos, lucro líquido por período | § 6.5 | |
+| 15 | Flutter: integrar upload/download de comprovantes via Supabase Storage | § 6.6 | ✅ |
+| 16 | Flutter: funções de cálculo — total ganhos, total gastos, lucro líquido por período | § 6.5 | ✅ |
 | 17 | Flutter: tratamento de erros (mapear códigos Postgrest) e estados de loading em todas as operações | § 7.5 | |
 | 18 | Validar com o checklist final e executar testes | § 9 | |
 
@@ -374,8 +374,8 @@ Criar um `SupabaseService` com métodos por entidade:
 - [x] Implementar CRUD de Drivers (upsert para perfil único).
 - [x] Implementar CRUD de Earnings (com paginação e filtro por período).
 - [x] Implementar CRUD de Expenses (com paginação, filtro por período e categoria).
-- [ ] Integrar upload/download/delete de comprovantes via Storage.
-- [ ] Implementar cálculos de totais e lucro líquido por período.
+- [x] Integrar upload/download/delete de comprovantes via Storage.
+- [x] Implementar cálculos de totais e lucro líquido por período.
 - [ ] Substituir todos os dados mock pelas chamadas reais ao Supabase.
 - [ ] Tratamento de erros (mapear códigos Postgrest) e loading em todas as operações.
 
@@ -431,6 +431,6 @@ Para avançar com a integração, devemos focar nas seguintes tarefas prioritár
   - [x] Substituir as listas mock nas telas `EarningsListScreen` e `ExpensesListScreen` por chamadas ao serviço.
   - [x] Implementar paginação básica (`range`) para evitar sobrecarga de dados.
 
-- [ ] **Fase 5: Storage e Cálculos (Itens 15 e 16)**
-  - Integrar o seletor de imagens com o upload para o bucket `receipts`.
-  - Consumir a RPC `get_period_totals` para os indicadores de resumo financeiro.
+- [x] **Fase 5: Storage e Cálculos (Itens 15 e 16)**
+  - [x] Integrar o seletor de imagens com o upload para o bucket `receipts`.
+  - [x] Consumir a RPC `get_period_totals` para os indicadores de resumo financeiro.

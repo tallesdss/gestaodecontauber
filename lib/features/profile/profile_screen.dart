@@ -158,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // Membro desde
           Text(
-            'Membro desde: ${DateFormatter.formatMonthYear(_driver!.memberSince)}',
+            'Membro desde: ${_driver!.memberSince != null ? DateFormatter.formatMonthYear(_driver!.memberSince!) : 'N/A'}',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),

@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -14,12 +16,15 @@ import '../../core/widgets/app_chip.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_app_client.dart';
 import '../../core/supabase/supabase_error_handler.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/models/expense.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final Expense? initialExpense;
+  const AddExpenseScreen({super.key, this.initialExpense});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -27,15 +32,57 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _valueController = TextEditingController();
-  final _litersController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _notesController = TextEditingController();
+  late final TextEditingController _valueController;
+  late final TextEditingController _litersController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _notesController;
 
-  DateTime _selectedDate = DateTime.now();
+  late DateTime _selectedDate;
   String? _selectedCategory;
   String? _receiptImagePath;
+  File? _selectedImageFile;
+  String? _signedUrl;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final expense = widget.initialExpense;
+    
+    _valueController = TextEditingController(
+      text: expense != null ? CurrencyFormatter.format(expense.value) : '',
+    );
+    _litersController = TextEditingController(
+      text: expense?.liters?.toString().replaceAll('.', ',') ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: expense?.description ?? '',
+    );
+    _notesController = TextEditingController(
+      text: expense?.notes ?? '',
+    );
+    _selectedDate = expense?.date ?? DateTime.now();
+    _selectedCategory = expense?.category;
+    _receiptImagePath = expense?.receiptImagePath;
+    
+    if (_receiptImagePath != null) {
+      _loadSignedUrl();
+    }
+  }
+
+  Future<void> _loadSignedUrl() async {
+    if (_receiptImagePath == null) return;
+    try {
+      final url = await SupabaseService.getReceiptSignedUrl(_receiptImagePath!);
+      if (mounted) {
+        setState(() {
+          _signedUrl = url;
+        });
+      }
+    } catch (e) {
+      // Ignora erro no carregamento da URL
+    }
+  }
 
   // Categorias de gastos
   final List<Map<String, dynamic>> _categories = [
@@ -139,16 +186,52 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Future<void> _pickReceiptImage() async {
-    // TODO: Implementar seleção de imagem da câmera/galeria
-    // Por enquanto, apenas simula
-    setState(() {
-      _receiptImagePath = 'path/to/image.jpg';
-    });
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Câmera', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Galeria', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 70, // Reduz qualidade para economizar banda/storage
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImageFile = File(image.path);
+          _signedUrl = null; // Limpa URL antiga se houver
+        });
+      }
+    }
   }
 
   void _removeReceiptImage() {
     setState(() {
       _receiptImagePath = null;
+      _selectedImageFile = null;
+      _signedUrl = null;
     });
   }
 
@@ -176,9 +259,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       // Parse do valor
       final value = CurrencyFormatter.parse(_valueController.text);
 
+      final expenseId = widget.initialExpense?.id ?? const Uuid().v4();
+      String? finalImagePath = _receiptImagePath;
+
+      // Se há uma nova imagem selecionada, faz o upload
+      if (_selectedImageFile != null) {
+        final userId = supabaseClient.auth.currentUser!.id;
+        final extension = _selectedImageFile!.path.split('.').last;
+        final storagePath = '$userId/expenses/$expenseId.$extension';
+        
+        final bytes = await _selectedImageFile!.readAsBytes();
+        finalImagePath = await SupabaseService.uploadReceiptImage(storagePath, bytes);
+      }
+
       // Criar o gasto
       final expense = Expense(
-        id: const Uuid().v4(),
+        id: expenseId,
         date: _selectedDate,
         category: _selectedCategory!,
         value: value,
@@ -187,18 +283,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 _litersController.text.isNotEmpty
             ? double.tryParse(_litersController.text.replaceAll(',', '.'))
             : null,
-        receiptImagePath: _receiptImagePath,
+        receiptImagePath: finalImagePath,
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
 
       // Salvar no Supabase
-      await SupabaseService.createExpense(expense);
+      if (widget.initialExpense != null) {
+        await SupabaseService.updateExpense(expense);
+      } else {
+        await SupabaseService.createExpense(expense);
+      }
 
       if (mounted) {
-        context.pop();
+        context.pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gasto adicionado com sucesso!'),
+          SnackBar(
+            content: Text(
+              widget.initialExpense != null
+                  ? 'Gasto atualizado com sucesso!'
+                  : 'Gasto adicionado com sucesso!',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -242,7 +346,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             children: [
               // Header
               AppTopBar(
-                title: 'Adicionar Gasto',
+                title: widget.initialExpense != null ? 'Editar Gasto' : 'Adicionar Gasto',
                 showBackButton: true,
                 actions: [
                   IconButton(
@@ -468,7 +572,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           style: AppTypography.labelLarge,
         ),
         const SizedBox(height: AppSpacing.sm),
-        if (_receiptImagePath == null)
+        if (_receiptImagePath == null && _selectedImageFile == null)
           InkWell(
             onTap: _pickReceiptImage,
             borderRadius: AppRadius.borderRadiusMD,
@@ -501,16 +605,29 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: ClipRRect(
                   borderRadius: AppRadius.borderRadiusMD,
                   child: Container(
-                    height: 150,
+                    height: 200,
                     width: double.infinity,
                     color: AppColors.surface,
-                    child: const Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 48,
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
+                    child: _selectedImageFile != null
+                        ? Image.file(
+                            _selectedImageFile!,
+                            fit: BoxFit.cover,
+                          )
+                        : _signedUrl != null
+                            ? CachedNetworkImage(
+                                imageUrl: _signedUrl!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.error,
+                                  color: AppColors.error,
+                                ),
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                   ),
                 ),
               ),

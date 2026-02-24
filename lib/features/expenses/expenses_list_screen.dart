@@ -10,6 +10,7 @@ import '../../core/widgets/app_button.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_error_handler.dart';
 import '../../shared/models/expense.dart';
 
 enum FilterPeriod { today, week, month, custom }
@@ -210,18 +211,36 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              // TODO: Implementar exclusão
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Gasto excluído com sucesso',
-                    style: AppTypography.bodyMedium,
+            onPressed: () async {
+              try {
+                await SupabaseService.deleteExpense(expense.id);
+                if (!context.mounted) return;
+                
+                Navigator.pop(context);
+                _loadExpenses(); // Recarrega a lista
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Gasto excluído com sucesso',
+                      style: AppTypography.bodyMedium,
+                    ),
+                    backgroundColor: AppColors.success,
                   ),
-                  backgroundColor: AppColors.success,
-                ),
-              );
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      SupabaseErrorHandler.mapError(e),
+                      style: AppTypography.bodyMedium,
+                    ),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
             },
             child: Text(
               'Excluir',
@@ -264,18 +283,24 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
             _buildMenuOption(
               icon: Icons.visibility_outlined,
               label: 'Ver detalhes',
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                context.push('/detail/expense/${expense.id}', extra: expense);
+                final result = await context.push('/detail/expense/${expense.id}', extra: expense);
+                if (result == true) {
+                  _loadExpenses();
+                }
               },
             ),
             const SizedBox(height: AppSpacing.md),
             _buildMenuOption(
               icon: Icons.edit_outlined,
               label: 'Editar',
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: Navegar para editar
+                final result = await context.push('/expenses/add', extra: expense);
+                if (result == true) {
+                  _loadExpenses();
+                }
               },
             ),
             const SizedBox(height: AppSpacing.md),
@@ -416,8 +441,11 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
               Icons.add_circle_outline,
               color: AppColors.textPrimary,
             ),
-            onPressed: () {
-              context.push('/expenses/add');
+            onPressed: () async {
+              final result = await context.push('/expenses/add');
+              if (result == true) {
+                _loadExpenses();
+              }
             },
           ),
         ],
@@ -791,8 +819,11 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
     final categoryColor = _getCategoryColor(expense.category);
 
     return AppCard(
-      onTap: () {
-        context.push('/detail/expense/${expense.id}', extra: expense);
+      onTap: () async {
+        final result = await context.push('/detail/expense/${expense.id}', extra: expense);
+        if (result == true) {
+          _loadExpenses();
+        }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -967,8 +998,11 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
             AppButton(
               text: 'Adicionar Gasto',
               icon: Icons.add_circle,
-              onPressed: () {
-                context.push('/expenses/add');
+              onPressed: () async {
+                final result = await context.push('/expenses/add');
+                if (result == true) {
+                  _loadExpenses();
+                }
               },
               width: 200,
             ),

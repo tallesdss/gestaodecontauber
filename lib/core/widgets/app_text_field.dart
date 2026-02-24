@@ -19,6 +19,8 @@ class AppTextField extends StatelessWidget {
   final VoidCallback? onSuffixTap;
   final List<TextInputFormatter>? inputFormatters;
 
+  final bool enabled;
+
   const AppTextField({
     super.key,
     this.label,
@@ -33,6 +35,7 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.onSuffixTap,
     this.inputFormatters,
+    this.enabled = true,
   });
 
   @override
@@ -55,6 +58,7 @@ class AppTextField extends StatelessWidget {
           obscureText: obscureText,
           maxLines: maxLines,
           inputFormatters: inputFormatters,
+          enabled: enabled,
           style: AppTypography.bodyLarge,
           decoration: InputDecoration(
             filled: true,

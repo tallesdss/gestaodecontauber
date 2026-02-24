@@ -1,5 +1,6 @@
 class Earning {
   final String id;
+  final String? userId;
   final DateTime date;
   final double value;
   final String? platform;
@@ -11,6 +12,7 @@ class Earning {
 
   Earning({
     required this.id,
+    this.userId,
     required this.date,
     required this.value,
     this.platform,
@@ -34,6 +36,7 @@ class Earning {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      if (userId != null) 'userId': userId,
       'date': _dateOnlyIso8601(date),
       'value': value,
       'platform': platform,
@@ -48,6 +51,7 @@ class Earning {
   factory Earning.fromMap(Map<String, dynamic> map) {
     return Earning(
       id: map['id'] as String,
+      userId: map['userId'] as String?,
       date: _parseDate(map['date'] as String),
       value: (map['value'] as num).toDouble(),
       platform: map['platform'] as String?,

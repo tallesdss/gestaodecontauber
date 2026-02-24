@@ -2,6 +2,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_app_client.dart';
 import 'supabase_field_mapping.dart';
 import '../../shared/models/driver.dart';
+import '../../shared/models/earning.dart';
+import '../../shared/models/expense.dart';
+import 'dart:typed_data';
 
 class SupabaseService {
   SupabaseService._();
@@ -67,9 +70,7 @@ class SupabaseService {
     var query = supabaseClient
         .from('earnings')
         .select()
-        .eq('user_id', userId)
-        .order('date', ascending: false)
-        .range(from, to);
+        .eq('user_id', userId);
 
     if (start != null) {
       query = query.gte('date', SupabaseFieldMapping.toSupabaseDate(start));
@@ -78,7 +79,9 @@ class SupabaseService {
       query = query.lte('date', SupabaseFieldMapping.toSupabaseDate(end));
     }
 
-    final List<dynamic> response = await query;
+    final List<dynamic> response = await query
+        .order('date', ascending: false)
+        .range(from, to);
     return response.map((map) {
       final dartMap = SupabaseFieldMapping.fromSupabaseMap(
         map,
@@ -155,9 +158,7 @@ class SupabaseService {
     var query = supabaseClient
         .from('expenses')
         .select()
-        .eq('user_id', userId)
-        .order('date', ascending: false)
-        .range(from, to);
+        .eq('user_id', userId);
 
     if (start != null) {
       query = query.gte('date', SupabaseFieldMapping.toSupabaseDate(start));
@@ -169,7 +170,9 @@ class SupabaseService {
       query = query.eq('category', category);
     }
 
-    final List<dynamic> response = await query;
+    final List<dynamic> response = await query
+        .order('date', ascending: false)
+        .range(from, to);
     return response.map((map) {
       final dartMap = SupabaseFieldMapping.fromSupabaseMap(
         map,

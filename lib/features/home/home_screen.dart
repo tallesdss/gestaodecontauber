@@ -28,11 +28,31 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Dados do motorista vindos do Supabase
   Driver? _driver;
+  
+  // Totais reais vindos do Supabase (RPC)
+  double _todayEarnings = 0.0;
+  double _todayExpenses = 0.0;
+  double _todayProfit = 0.0;
+  
+  // Atividades recentes reais
+  List<dynamic> _recentActivities = [];
 
   @override
   void initState() {
     super.initState();
-    _loadDriverData();
+    _loadAllData();
+  }
+
+  Future<void> _loadAllData() async {
+    setState(() => _isLoading = true);
+    await Future.wait([
+      _loadDriverData(),
+      _loadTotals(),
+      _loadRecentActivities(),
+    ]);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadDriverData() async {
@@ -41,52 +61,61 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() {
           _driver = driver;
-          _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      // Erro tratado no _loadAllData ou exibido via fallback
     }
   }
 
-  // Dados do dia atual (mock)
-  final double _todayEarnings = 450.0;
-  final double _todayExpenses = 80.0;
-  double get _todayProfit => _todayEarnings - _todayExpenses;
-
-  // Atividades recentes (mock) - convertidas para objetos Earning/Expense
-  List<dynamic> get _recentActivities {
-    final now = DateTime.now();
-    return [
-      Earning(
-        id: 'home-1',
-        date: DateTime(now.year, now.month, now.day, 14, 30),
-        value: 450.0,
-        platform: 'Uber',
-        numberOfRides: 15,
-        hoursWorked: 8.0,
-        notes: 'Ganho do dia',
-      ),
-      Expense(
-        id: 'home-2',
-        date: DateTime(now.year, now.month, now.day, 12, 0),
-        category: 'Combustível',
-        value: 80.0,
-        description: 'Gasolina comum',
-        liters: 30.0,
-      ),
-      Earning(
-        id: 'home-3',
-        date: DateTime(now.year, now.month, now.day, 10, 15),
-        value: 320.0,
-        platform: '99',
-        numberOfRides: 12,
-        hoursWorked: 6.5,
-      ),
-    ];
+  Future<void> _loadTotals() async {
+    try {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
+      
+      final totals = await SupabaseService.getPeriodTotals(startOfDay, endOfDay);
+      if (mounted) {
+        setState(() {
+          _todayEarnings = totals['totalEarnings'] ?? 0.0;
+          _todayExpenses = totals['totalExpenses'] ?? 0.0;
+          _todayProfit = totals['netProfit'] ?? 0.0;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar totais: $e');
+    }
   }
+
+  Future<void> _loadRecentActivities() async {
+    try {
+      // Busca os últimos 5 ganhos e 5 despesas
+      final results = await Future.wait([
+        SupabaseService.getEarnings(from: 0, to: 4),
+        SupabaseService.getExpenses(from: 0, to: 4),
+      ]);
+      
+      final earnings = results[0] as List<Earning>;
+      final expenses = results[1] as List<Expense>;
+      
+      // Combina e ordena por data decrescente
+      final combined = [...earnings, ...expenses];
+      combined.sort((a, b) {
+        final dateA = a is Earning ? a.date : (a as Expense).date;
+        final dateB = b is Earning ? b.date : (b as Expense).date;
+        return dateB.compareTo(dateA);
+      });
+      
+      if (mounted) {
+        setState(() {
+          _recentActivities = combined.take(5).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar atividades recentes: $e');
+    }
+  }
+
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -117,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text('Erro ao carregar perfil.', style: TextStyle(color: Colors.white)),
-              TextButton(onPressed: _loadDriverData, child: const Text('Tentar novamente')),
+              TextButton(onPressed: _loadAllData, child: const Text('Tentar novamente')),
             ],
           ),
         ),

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
@@ -11,8 +10,12 @@ import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
+import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_error_handler.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final Earning? earning;
   final Expense? expense;
 
@@ -25,12 +28,46 @@ class DetailScreen extends StatelessWidget {
           'Não pode fornecer earning e expense ao mesmo tempo',
         );
 
-  bool get isEarning => earning != null;
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  String? _signedUrl;
+  bool _isLoadingUrl = false;
+
+  bool get isEarning => widget.earning != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!isEarning && widget.expense?.receiptImagePath != null) {
+      _loadSignedUrl();
+    }
+  }
+
+  Future<void> _loadSignedUrl() async {
+    setState(() => _isLoadingUrl = true);
+    try {
+      final url = await SupabaseService.getReceiptSignedUrl(
+          widget.expense!.receiptImagePath!);
+      if (mounted) {
+        setState(() {
+          _signedUrl = url;
+          _isLoadingUrl = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingUrl = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     // Se não houver dados, mostrar mensagem
-    if (earning == null && expense == null) {
+    if (widget.earning == null && widget.expense == null) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
         appBar: const AppTopBar(
@@ -75,8 +112,14 @@ class DetailScreen extends StatelessWidget {
               Icons.edit,
               color: AppColors.textPrimary,
             ),
-            onPressed: () {
-              // TODO: Navegar para tela de edição
+            onPressed: () async {
+              final result = await context.push(
+                isEarning ? '/earnings/add' : '/expenses/add',
+                extra: isEarning ? widget.earning : widget.expense,
+              );
+              if (result == true && context.mounted) {
+                context.pop(true); // Retorna para a lista avisando que mudou
+              }
             },
           ),
           IconButton(
@@ -96,7 +139,7 @@ class DetailScreen extends StatelessWidget {
             _buildMainCard(context),
             const SizedBox(height: AppSpacing.xl),
             _buildDetailsSection(context),
-            if (expense?.receiptImagePath != null) ...[
+            if (widget.expense?.receiptImagePath != null) ...[
               const SizedBox(height: AppSpacing.xl),
               _buildReceiptSection(context),
             ],
@@ -112,8 +155,8 @@ class DetailScreen extends StatelessWidget {
   Widget _buildMainCard(BuildContext context) {
     final icon = isEarning ? Icons.attach_money : _getCategoryIcon();
     final type = isEarning ? 'Ganho' : 'Gasto';
-    final value = isEarning ? earning!.value : expense!.value;
-    final date = isEarning ? earning!.date : expense!.date;
+    final value = isEarning ? widget.earning!.value : widget.expense!.value;
+    final date = isEarning ? widget.earning!.date : widget.expense!.date;
     final color = isEarning ? AppColors.earnings : _getCategoryColor();
 
     return AppCard(
@@ -197,52 +240,52 @@ class DetailScreen extends StatelessWidget {
             icon: Icons.calendar_today,
             label: 'Data',
             value: DateFormatter.formatDate(
-              isEarning ? earning!.date : expense!.date,
+              isEarning ? widget.earning!.date : widget.expense!.date,
             ),
           ),
           if (isEarning) ...[
-            if (earning!.platform != null)
+            if (widget.earning!.platform != null)
               _buildDetailItem(
                 icon: Icons.directions_car,
                 label: 'Plataforma',
-                value: earning!.platform!,
+                value: widget.earning!.platform!,
               ),
-            if (earning!.numberOfRides != null)
+            if (widget.earning!.numberOfRides != null)
               _buildDetailItem(
                 icon: Icons.pin_drop,
                 label: 'Corridas realizadas',
-                value: '${earning!.numberOfRides}',
+                value: '${widget.earning!.numberOfRides}',
               ),
-            if (earning!.hoursWorked != null)
+            if (widget.earning!.hoursWorked != null)
               _buildDetailItem(
                 icon: Icons.schedule,
                 label: 'Horas trabalhadas',
-                value: '${earning!.hoursWorked!.toStringAsFixed(1)}h',
+                value: '${widget.earning!.hoursWorked!.toStringAsFixed(1)}h',
               ),
           ] else ...[
             _buildDetailItem(
               icon: _getCategoryIcon(),
               label: 'Categoria',
-              value: expense!.category,
+              value: widget.expense!.category,
             ),
             _buildDetailItem(
               icon: Icons.description,
               label: 'Descrição',
-              value: expense!.description,
+              value: widget.expense!.description,
             ),
-            if (expense!.liters != null)
+            if (widget.expense!.liters != null)
               _buildDetailItem(
                 icon: Icons.local_gas_station,
                 label: 'Litros abastecidos',
-                value: '${expense!.liters!.toStringAsFixed(1)}L',
+                value: '${widget.expense!.liters!.toStringAsFixed(1)}L',
               ),
           ],
-          if ((isEarning && earning!.notes != null) ||
-              (!isEarning && expense!.notes != null))
+          if ((isEarning && widget.earning!.notes != null) ||
+              (!isEarning && widget.expense!.notes != null))
             _buildDetailItem(
               icon: Icons.note,
               label: 'Observações',
-              value: isEarning ? earning!.notes! : expense!.notes!,
+              value: isEarning ? widget.earning!.notes! : widget.expense!.notes!,
               isLast: true,
             ),
         ],
@@ -300,7 +343,9 @@ class DetailScreen extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           GestureDetector(
             onTap: () {
-              // TODO: Abrir imagem em tela cheia
+              if (_signedUrl != null) {
+                // TODO: Abrir imagem em tela cheia
+              }
             },
             child: ClipRRect(
               borderRadius: AppRadius.borderRadiusLG,
@@ -318,8 +363,14 @@ class DetailScreen extends StatelessWidget {
         AppButton(
           text: 'Editar',
           icon: Icons.edit,
-          onPressed: () {
-            // TODO: Navegar para tela de edição
+          onPressed: () async {
+            final result = await context.push(
+              isEarning ? '/earnings/add' : '/expenses/add',
+              extra: isEarning ? widget.earning : widget.expense,
+            );
+            if (result == true && context.mounted) {
+              context.pop(true);
+            }
           },
           width: double.infinity,
         ),
@@ -398,10 +449,29 @@ class DetailScreen extends StatelessWidget {
                 child: AppButton(
                   text: 'Excluir',
                   backgroundColor: AppColors.error,
-                  onPressed: () {
-                    // TODO: Implementar exclusão
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
+                  onPressed: () async {
+                    try {
+                      if (isEarning) {
+                        await SupabaseService.deleteEarning(widget.earning!.id);
+                      } else {
+                        await SupabaseService.deleteExpense(widget.expense!.id);
+                      }
+                      
+                      if (context.mounted) {
+                        Navigator.of(context).pop(); // Fecha dialog
+                        context.pop(true); // Volta para lista com sinalizador
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(SupabaseErrorHandler.mapError(e)),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    }
                   },
                 ),
               ),
@@ -414,7 +484,7 @@ class DetailScreen extends StatelessWidget {
 
   IconData _getCategoryIcon() {
     if (!isEarning) {
-      switch (expense!.category.toLowerCase()) {
+      switch (widget.expense!.category.toLowerCase()) {
         case 'combustível':
         case 'fuel':
           return Icons.local_gas_station;
@@ -439,7 +509,7 @@ class DetailScreen extends StatelessWidget {
 
   Color _getCategoryColor() {
     if (!isEarning) {
-      switch (expense!.category.toLowerCase()) {
+      switch (widget.expense!.category.toLowerCase()) {
         case 'combustível':
         case 'fuel':
           return AppColors.fuel;
@@ -454,39 +524,29 @@ class DetailScreen extends StatelessWidget {
   }
 
   Widget _buildReceiptImage() {
-    final imagePath = expense!.receiptImagePath!;
-    
-    // Tenta carregar como arquivo primeiro, depois como asset
-    Widget imageWidget;
-    
-    if (imagePath.startsWith('/') || imagePath.startsWith('file://')) {
-      // É um caminho de arquivo
-      final filePath = imagePath.replaceFirst('file://', '');
-      final file = File(filePath);
-      
-      if (file.existsSync()) {
-        imageWidget = Image.file(
-          file,
-          width: double.infinity,
-          height: 200,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => _buildImageError(),
-        );
-      } else {
-        imageWidget = _buildImageError();
-      }
-    } else {
-      // Tenta como asset
-      imageWidget = Image.asset(
-        imagePath,
+    if (_isLoadingUrl) {
+      return Container(
         width: double.infinity,
         height: 200,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildImageError(),
+        color: AppColors.surface,
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    return imageWidget;
+    if (_signedUrl == null) {
+      return _buildImageError();
+    }
+
+    return CachedNetworkImage(
+      imageUrl: _signedUrl!,
+      width: double.infinity,
+      height: 200,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      errorWidget: (context, url, error) => _buildImageError(),
+    );
   }
 
   Widget _buildImageError() {
@@ -514,4 +574,3 @@ class DetailScreen extends StatelessWidget {
     );
   }
 }
-

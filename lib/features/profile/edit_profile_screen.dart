@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -210,47 +210,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
--
     setState(() => _isSaving = true);
--
+
     try {
--      // Simular salvamento (frontend only)
--      await Future.delayed(const Duration(milliseconds: 800));
--
-+      final goal = CurrencyFormatter.parse(_monthlyGoalController.text);
-+      
-+      final updatedDriver = Driver(
-+        name: _nameController.text.trim(),
-+        monthlyGoal: goal,
-+        memberSince: widget.driver?.memberSince ?? DateTime.now(),
-+      );
-+
-+      await SupabaseService.upsertDriver(updatedDriver);
-+
-       if (mounted) {
-         setState(() => _isSaving = false);
--        _showSnackBar('Perfil atualizado com sucesso!');
-+        ScaffoldMessenger.of(context).showSnackBar(
-+          const SnackBar(
-+            content: Text('Perfil atualizado com sucesso!'),
-+            backgroundColor: AppColors.success,
-+          ),
-+        );
-         context.pop();
-       }
-     } catch (e) {
-       if (mounted) {
-         setState(() => _isSaving = false);
--        _showSnackBar('Erro ao salvar perfil');
-+        ScaffoldMessenger.of(context).showSnackBar(
-+          SnackBar(
-+            content: Text(SupabaseErrorHandler.mapError(e)),
-+            backgroundColor: AppColors.error,
-+          ),
-+        );
-       }
-     }
-   }
+      final goal = CurrencyFormatter.parse(_monthlyGoalController.text);
+      
+      final updatedDriver = Driver(
+        name: _nameController.text.trim(),
+        monthlyGoal: goal,
+        memberSince: widget.driver?.memberSince ?? DateTime.now(),
+      );
+
+      await SupabaseService.upsertDriver(updatedDriver);
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil atualizado com sucesso!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(SupabaseErrorHandler.mapError(e)),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   void _cancel() {
     context.pop();

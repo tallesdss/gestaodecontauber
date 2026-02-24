@@ -1,5 +1,6 @@
 class Expense {
   final String id;
+  final String? userId;
   final DateTime date;
   final String category;
   final double value;
@@ -12,6 +13,7 @@ class Expense {
 
   Expense({
     required this.id,
+    this.userId,
     required this.date,
     required this.category,
     required this.value,
@@ -36,6 +38,7 @@ class Expense {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      if (userId != null) 'userId': userId,
       'date': _dateOnlyIso8601(date),
       'category': category,
       'value': value,
@@ -51,6 +54,7 @@ class Expense {
   factory Expense.fromMap(Map<String, dynamic> map) {
     return Expense(
       id: map['id'] as String,
+      userId: map['userId'] as String?,
       date: _parseDate(map['date'] as String),
       category: map['category'] as String,
       value: (map['value'] as num).toDouble(),

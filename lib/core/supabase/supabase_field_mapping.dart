@@ -1,10 +1,10 @@
-/// Mapeamento oficial entre colunas do Supabase (snake_case) e campos Dart (camelCase).
-///
-/// Consultar este arquivo ao implementar:
-/// - § 7.3 Camada de conversão (toSupabaseMap / fromSupabaseMap)
-/// - § 7.6 Atualização dos modelos Dart
-///
-/// Ref: backend.md § 3.
+// Mapeamento oficial entre colunas do Supabase (snake_case) e campos Dart (camelCase).
+//
+// Consultar este arquivo ao implementar:
+// - § 7.3 Camada de conversão (toSupabaseMap / fromSupabaseMap)
+// - § 7.6 Atualização dos modelos Dart
+//
+// Ref: backend.md § 3.
 
 class SupabaseFieldMapping {
   SupabaseFieldMapping._();
@@ -92,6 +92,7 @@ class SupabaseFieldMapping {
   /// Coluna Supabase → campo Dart
   static const Map<String, String> earningsSupabaseToDart = {
     'id': 'id',
+    'user_id': 'userId',
     'date': 'date',
     'value': 'value',
     'platform': 'platform',
@@ -105,6 +106,7 @@ class SupabaseFieldMapping {
   /// Campo Dart → coluna Supabase
   static const Map<String, String> earningsDartToSupabase = {
     'id': 'id',
+    'userId': 'user_id',
     'date': 'date',
     'value': 'value',
     'platform': 'platform',
@@ -122,6 +124,7 @@ class SupabaseFieldMapping {
   /// Coluna Supabase → campo Dart
   static const Map<String, String> expensesSupabaseToDart = {
     'id': 'id',
+    'user_id': 'userId',
     'date': 'date',
     'category': 'category',
     'value': 'value',
@@ -136,6 +139,7 @@ class SupabaseFieldMapping {
   /// Campo Dart → coluna Supabase
   static const Map<String, String> expensesDartToSupabase = {
     'id': 'id',
+    'userId': 'user_id',
     'date': 'date',
     'category': 'category',
     'value': 'value',
