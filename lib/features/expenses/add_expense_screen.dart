@@ -13,6 +13,8 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_error_handler.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/models/expense.dart';
 
@@ -189,13 +191,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
 
-      // TODO: Salvar no banco de dados
-      // await DatabaseService.instance.addExpense(expense);
-      // ignore: unused_local_variable
-      final _ = expense; // Será usado quando o banco de dados for implementado
-
-      // Simular delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Salvar no Supabase
+      await SupabaseService.createExpense(expense);
 
       if (mounted) {
         context.pop();
@@ -210,7 +207,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao salvar: $e'),
+            content: Text(SupabaseErrorHandler.mapError(e)),
             backgroundColor: AppColors.error,
           ),
         );

@@ -49,11 +49,11 @@ Seguir obrigatoriamente nesta ordem. Cada passo depende do anterior para funcion
 | 7 | Consultar mapeamento snake_case ↔ camelCase para os modelos Dart | § 3 | ✅ |
 | 8 | Flutter: inicializar Supabase no `main.dart` e configurar o cliente | § 7.1, § 7.2 | ✅ |
 | 9 | Flutter: ajustar modelos Dart (`id`, `userId`, datas, `createdAt`/`updatedAt`) | § 7.6 | ✅ |
-| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | 🔶 *parcial* (mapeamento em `SupabaseFieldMapping`; faltam funções centralizadas) |
-| 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 | |
-| 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 | |
-| 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 | |
-| 14 | Flutter: CRUD de Expenses no serviço e nas telas (com paginação, filtro por período e categoria) | § 6, § 7.4 | |
+| 10 | Flutter: implementar camada de conversão (`toSupabaseMap` / `fromSupabaseMap`) | § 7.3 | ✅ |
+| 11 | Autenticação: habilitar providers no Supabase; implementar registro, login e logout no app | § 8 | ✅ |
+| 12 | Flutter: CRUD de Drivers no serviço e nas telas (upsert para perfil único por usuário) | § 4, § 7.4 | ✅ |
+| 13 | Flutter: CRUD de Earnings no serviço e nas telas (com paginação e filtro por período) | § 5, § 7.4 | ✅ |
+| 14 | Flutter: CRUD de Expenses no serviço e nas telas (com paginação, filtro por período e categoria) | § 6, § 7.4 | ✅ |
 | 15 | Flutter: integrar upload/download de comprovantes via Supabase Storage | § 6.6 | |
 | 16 | Flutter: funções de cálculo — total ganhos, total gastos, lucro líquido por período | § 6.5 | |
 | 17 | Flutter: tratamento de erros (mapear códigos Postgrest) e estados de loading em todas as operações | § 7.5 | |
@@ -368,12 +368,12 @@ Criar um `SupabaseService` com métodos por entidade:
 ### Flutter (app)
 
 - [x] Adicionar `supabase_flutter` e inicializar no `main.dart` com variáveis de ambiente.
-- [ ] Implementar camada de conversão `snake_case ↔ camelCase` (mapeamento em `SupabaseFieldMapping`; faltam funções `toSupabaseMap`/`fromSupabaseMap` centralizadas).
+- [x] Implementar camada de conversão `snake_case ↔ camelCase` (Mapeamento centralizado no `SupabaseFieldMapping`).
 - [x] Ajustar modelos Dart (`id`, `userId`, datas, `receiptImagePath`).
-- [ ] Implementar Auth (registro, login, logout, tratamento de sessão).
-- [ ] Implementar CRUD de Drivers (upsert para perfil único).
-- [ ] Implementar CRUD de Earnings (com paginação e filtro por período).
-- [ ] Implementar CRUD de Expenses (com paginação, filtro por período e categoria).
+- [x] Implementar Auth (registro, login, logout, tratamento de sessão).
+- [x] Implementar CRUD de Drivers (upsert para perfil único).
+- [x] Implementar CRUD de Earnings (com paginação e filtro por período).
+- [x] Implementar CRUD de Expenses (com paginação, filtro por período e categoria).
 - [ ] Integrar upload/download/delete de comprovantes via Storage.
 - [ ] Implementar cálculos de totais e lucro líquido por período.
 - [ ] Substituir todos os dados mock pelas chamadas reais ao Supabase.
@@ -406,3 +406,31 @@ Criar um `SupabaseService` com métodos por entidade:
 - **Categorias de despesas:** tabela dedicada com FK em `expenses` para relatórios e filtros mais consistentes.
 - **Edge Functions:** lógica de negócio mais complexa (ex.: notificações de meta atingida) via Supabase Edge Functions.
 - **Relatórios avançados:** views materializadas ou RPCs adicionais para gráficos de evolução mensal, top categorias de gastos e comparativos entre períodos.
+
+---
+
+## 12. Próximos Passos Imediatos 🚀
+
+Para avançar com a integração, devemos focar nas seguintes tarefas prioritárias:
+
+- [x] **Fase 1: Mapeamento e Infra (Item 10)**
+  - [x] Implementar métodos `toSupabaseMap` e `fromSupabaseMap` no `SupabaseFieldMapping`.
+  - [x] Garantir que tipos como `DateTime` e `double` sejam convertidos corretamente entre Dart e Postgres.
+
+- [x] **Fase 2: Autenticação (Item 11)**
+  - [x] Criar `AuthService` (login, registro, logout, reset de senha).
+  - [x] Integrar o estado da sessão no `AppRouter` para proteger as rotas.
+  - [x] Criar telas de Login e Registro (ou adaptar as existentes para o Supabase).
+
+- [x] **Fase 3: Sincronização de Perfil (Item 12)**
+  - [x] Implementar lógica de `upsert` para o `Driver` imediatamente após o primeiro login.
+  - [x] Substituir o nome do motorista e meta mensal hardcoded na Home pelos dados vindos do banco.
+
+- [x] **Fase 4: Migração dos Ganhos e Gastos (Itens 13 e 14)**
+  - [x] Implementar serviços CRUD para `Earnings` e `Expenses`.
+  - [x] Substituir as listas mock nas telas `EarningsListScreen` e `ExpensesListScreen` por chamadas ao serviço.
+  - [x] Implementar paginação básica (`range`) para evitar sobrecarga de dados.
+
+- [ ] **Fase 5: Storage e Cálculos (Itens 15 e 16)**
+  - Integrar o seletor de imagens com o upload para o bucket `receipts`.
+  - Consumir a RPC `get_period_totals` para os indicadores de resumo financeiro.

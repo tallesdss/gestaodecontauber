@@ -10,12 +10,69 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_top_bar.dart';
 import '../../core/widgets/summary_card.dart';
 import '../../core/widgets/app_dialogs.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/auth_service.dart';
 
-class ProfileScreen extends StatelessWidget {
+import '../../core/supabase/supabase_service.dart';
+import '../../shared/models/driver.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Driver? _driver;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDriverData();
+  }
+
+  Future<void> _loadDriverData() async {
+    try {
+      final driver = await SupabaseService.getDriver();
+      if (mounted) {
+        setState(() {
+          _driver = driver;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_driver == null) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Erro ao carregar perfil.', style: TextStyle(color: Colors.white)),
+              TextButton(onPressed: _loadDriverData, child: const Text('Tentar novamente')),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: const AppTopBar(
@@ -56,17 +113,20 @@ class ProfileScreen extends StatelessWidget {
           // Avatar editável
           Stack(
             children: [
-              const AppAvatar(
-                initials: 'JD',
+              AppAvatar(
+                initials: _driver!.name.split(' ').map((n) => n[0]).take(2).join(),
                 size: 100,
               ),
               Positioned(
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () {
-                    context.push('/profile/edit');
-                  },
+                onTap: () async {
+                  final result = await context.push('/profile/edit', extra: _driver);
+                  if (result == true) {
+                    _loadDriverData();
+                  }
+                },
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
@@ -91,14 +151,14 @@ class ProfileScreen extends StatelessWidget {
 
           // Nome do motorista
           Text(
-            'João da Silva',
+            _driver!.name,
             style: AppTypography.h2,
           ),
           const SizedBox(height: AppSpacing.xs),
 
           // Membro desde
           Text(
-            'Membro desde: Dezembro 2024',
+            'Membro desde: ${DateFormatter.formatMonthYear(_driver!.memberSince)}',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -109,8 +169,11 @@ class ProfileScreen extends StatelessWidget {
           AppButton(
             text: 'Editar Perfil',
             isOutlined: true,
-            onPressed: () {
-              context.push('/profile/edit');
+            onPressed: () async {
+              final result = await context.push('/profile/edit', extra: _driver);
+              if (result == true) {
+                _loadDriverData();
+              }
             },
             width: double.infinity,
           ),
@@ -312,9 +375,11 @@ class ProfileScreen extends StatelessWidget {
       confirmText: 'Sair',
       cancelText: 'Cancelar',
       confirmColor: AppColors.error,
-      onConfirm: () {
-        // TODO: Implementar logout
-        _showSnackBar(context, 'Logout realizado com sucesso!');
+      onConfirm: () async {
+        await AuthService.signOut();
+        if (context.mounted) {
+          _showSnackBar(context, 'Saída realizada com sucesso!');
+        }
       },
     );
   }

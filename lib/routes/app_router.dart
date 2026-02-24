@@ -1,5 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
+import '../core/supabase/auth_service.dart';
+import '../core/supabase/supabase_app_client.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/home/home_screen.dart';
@@ -24,7 +30,33 @@ import '../features/help/help_screen.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    refreshListenable: GoRouterRefreshStream(AuthService.onAuthStateChange),
+    redirect: (context, state) {
+      final isAuthenticated = AuthService.isAuthenticated;
+      final isLoggingIn = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
+          state.matchedLocation == '/splash' ||
+          state.matchedLocation == '/onboarding';
+
+      if (!isAuthenticated && !isLoggingIn) {
+        return '/login';
+      }
+
+      if (isAuthenticated && (state.matchedLocation == '/login' || state.matchedLocation == '/register')) {
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
@@ -114,5 +146,22 @@ class AppRouter {
       ),
     ),
   );
+}
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<AuthState> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+          (dynamic _) => notifyListeners(),
+        );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 

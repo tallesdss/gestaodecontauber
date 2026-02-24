@@ -16,8 +16,14 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/app_top_bar.dart';
 import '../../core/utils/currency_formatter.dart';
 
+import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_error_handler.dart';
+import '../../core/supabase/auth_service.dart';
+import '../../shared/models/driver.dart';
+
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  final Driver? driver;
+  const EditProfileScreen({super.key, this.driver});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -25,12 +31,13 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'João da Silva');
-  final _emailController = TextEditingController(text: 'joao@email.com');
-  final _phoneController = TextEditingController(text: '');
-  final _monthlyGoalController = TextEditingController(text: 'R\$ 10.000,00');
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  final _phoneController = TextEditingController();
+  late TextEditingController _monthlyGoalController;
 
   Uint8List? _imageBytes;
+  bool _isLoading = true;
   bool _isSaving = false;
 
   late final MaskTextInputFormatter _phoneMaskFormatter;
@@ -43,6 +50,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       filter: {'#': RegExp(r'[0-9]')},
       type: MaskAutoCompletionType.lazy,
     );
+
+    _nameController = TextEditingController(text: widget.driver?.name ?? '');
+    _emailController = TextEditingController(text: AuthService.currentUser?.email ?? '');
+    _monthlyGoalController = TextEditingController(
+      text: widget.driver != null ? CurrencyFormatter.format(widget.driver!.monthlyGoal) : '',
+    );
+    
+    if (widget.driver != null) {
+      _isLoading = false;
+    } else {
+      _loadDriverData();
+    }
+  }
+
+  Future<void> _loadDriverData() async {
+    try {
+      final driver = await SupabaseService.getDriver();
+      if (mounted && driver != null) {
+        setState(() {
+          _nameController.text = driver.name;
+          _monthlyGoalController.text = CurrencyFormatter.format(driver.monthlyGoal);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -174,25 +210,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
+-
     setState(() => _isSaving = true);
-
+-
     try {
-      // Simular salvamento (frontend only)
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      if (mounted) {
-        setState(() => _isSaving = false);
-        _showSnackBar('Perfil atualizado com sucesso!');
-        context.pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        _showSnackBar('Erro ao salvar perfil');
-      }
-    }
-  }
+-      // Simular salvamento (frontend only)
+-      await Future.delayed(const Duration(milliseconds: 800));
+-
++      final goal = CurrencyFormatter.parse(_monthlyGoalController.text);
++      
++      final updatedDriver = Driver(
++        name: _nameController.text.trim(),
++        monthlyGoal: goal,
++        memberSince: widget.driver?.memberSince ?? DateTime.now(),
++      );
++
++      await SupabaseService.upsertDriver(updatedDriver);
++
+       if (mounted) {
+         setState(() => _isSaving = false);
+-        _showSnackBar('Perfil atualizado com sucesso!');
++        ScaffoldMessenger.of(context).showSnackBar(
++          const SnackBar(
++            content: Text('Perfil atualizado com sucesso!'),
++            backgroundColor: AppColors.success,
++          ),
++        );
+         context.pop();
+       }
+     } catch (e) {
+       if (mounted) {
+         setState(() => _isSaving = false);
+-        _showSnackBar('Erro ao salvar perfil');
++        ScaffoldMessenger.of(context).showSnackBar(
++          SnackBar(
++            content: Text(SupabaseErrorHandler.mapError(e)),
++            backgroundColor: AppColors.error,
++          ),
++        );
+       }
+     }
+   }
 
   void _cancel() {
     context.pop();
@@ -250,88 +308,91 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: AppSpacing.paddingXL,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Foto
-              _buildPhotoSection(),
-              const SizedBox(height: AppSpacing.xxl),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: AppSpacing.paddingXL,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Foto
+                    _buildPhotoSection(),
+                    const SizedBox(height: AppSpacing.xxl),
 
-              // Campos do formulário
-              AppTextField(
-                label: 'Nome completo',
-                hint: 'Digite seu nome',
-                prefixIcon: Icons.person,
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Digite seu nome';
-                  }
-                  return null;
-                },
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              AppTextField(
-                label: 'Email',
-                hint: 'Digite seu email (opcional)',
-                prefixIcon: Icons.email,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              AppTextField(
-                label: 'Telefone',
-                hint: '(00) 00000-0000',
-                prefixIcon: Icons.phone,
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [_phoneMaskFormatter],
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              AppTextField(
-                label: 'Meta de ganho mensal',
-                hint: 'R\$ 0,00',
-                prefixIcon: Icons.flag,
-                controller: _monthlyGoalController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: _formatCurrency,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-
-              // Botões
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      text: 'Cancelar',
-                      isOutlined: true,
-                      onPressed: _cancel,
+                    // Campos do formulário
+                    AppTextField(
+                      label: 'Nome completo',
+                      hint: 'Digite seu nome',
+                      prefixIcon: Icons.person,
+                      controller: _nameController,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Digite seu nome';
+                        }
+                        return null;
+                      },
+                      onChanged: (_) => setState(() {}),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    flex: 2,
-                    child: AppButton(
-                      text: _isSaving ? 'Salvando...' : 'Salvar',
-                      onPressed: _isSaving ? null : _saveProfile,
+                    const SizedBox(height: AppSpacing.xl),
+
+                    AppTextField(
+                      label: 'Email',
+                      hint: 'Digite seu email (opcional)',
+                      prefixIcon: Icons.email,
+                      controller: _emailController,
+                      enabled: false, // Email não é editável diretamente aqui
+                      keyboardType: TextInputType.emailAddress,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.xl),
+
+                    AppTextField(
+                      label: 'Telefone',
+                      hint: '(00) 00000-0000',
+                      prefixIcon: Icons.phone,
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [_phoneMaskFormatter],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    AppTextField(
+                      label: 'Meta de ganho mensal',
+                      hint: 'R\$ 0,00',
+                      prefixIcon: Icons.flag,
+                      controller: _monthlyGoalController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: _formatCurrency,
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // Botões
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            text: 'Cancelar',
+                            isOutlined: true,
+                            onPressed: _cancel,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.lg),
+                        Expanded(
+                          flex: 2,
+                          child: AppButton(
+                            text: _isSaving ? 'Salvando...' : 'Salvar',
+                            onPressed: _isSaving ? null : _saveProfile,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                  ],
+                ),
               ),
-              const SizedBox(height: AppSpacing.xl),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 

@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/supabase/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,19 +62,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    // Verifica se o onboarding já foi concluído
+    // 1. Prioridade: Se autenticado, vai para Home
+    if (AuthService.isAuthenticated) {
+      if (mounted) context.go('/home');
+      return;
+    }
+
+    // 2. Se não autenticado, verifica onboarding
     final prefs = await SharedPreferences.getInstance();
     final onboardingCompleted =
         prefs.getBool(AppConstants.keyOnboardingCompleted) ?? false;
 
-    if (onboardingCompleted) {
-      // Navega para a Home
-      if (mounted) {
-        context.go('/home');
-      }
-    } else {
-      // Navega para o Onboarding
-      if (mounted) {
+    if (mounted) {
+      if (onboardingCompleted) {
+        context.go('/login');
+      } else {
         context.go('/onboarding');
       }
     }

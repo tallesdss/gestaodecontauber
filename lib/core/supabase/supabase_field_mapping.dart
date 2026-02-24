@@ -9,6 +9,56 @@
 class SupabaseFieldMapping {
   SupabaseFieldMapping._();
 
+  /// Converte um mapa Dart (camelCase) para um mapa Supabase (snake_case).
+  ///
+  /// Usa o [mapping] fornecido (ex: [driversDartToSupabase]) para traduzir as chaves.
+  /// Valores que sejam [DateTime] são convertidos para string ISO8601 UTC.
+  static Map<String, dynamic> toSupabaseMap(
+    Map<String, dynamic> dartMap,
+    Map<String, String> mapping,
+  ) {
+    final Map<String, dynamic> supabaseMap = {};
+    dartMap.forEach((key, value) {
+      final supabaseKey = mapping[key];
+      if (supabaseKey != null) {
+        var processedValue = value;
+
+        // Garantia de conversão para DateTime se não tiver sido feito no model
+        if (value is DateTime) {
+          processedValue = value.toUtc().toIso8601String();
+        }
+
+        supabaseMap[supabaseKey] = processedValue;
+      }
+    });
+    return supabaseMap;
+  }
+
+  /// Converte um mapa Supabase (snake_case) para um mapa Dart (camelCase).
+  ///
+  /// Usa o [mapping] fornecido (ex: [driversSupabaseToDart]) para traduzir as chaves.
+  /// Garante que valores numéricos possam ser tratados como double no Dart.
+  static Map<String, dynamic> fromSupabaseMap(
+    Map<String, dynamic> supabaseMap,
+    Map<String, String> mapping,
+  ) {
+    final Map<String, dynamic> dartMap = {};
+    supabaseMap.forEach((key, value) {
+      final dartKey = mapping[key];
+      if (dartKey != null) {
+        // No fromMap do model, costumamos usar (value as num).toDouble(),
+        // mas aqui mantemos o valor bruto para o model processar.
+        dartMap[dartKey] = value;
+      }
+    });
+    return dartMap;
+  }
+
+  /// Converte DateTime para string 'YYYY-MM-DD'.
+  static String toSupabaseDate(DateTime dt) {
+    return '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
   // ---------------------------------------------------------------------------
   // drivers
   // ---------------------------------------------------------------------------

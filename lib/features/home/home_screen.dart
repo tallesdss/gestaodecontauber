@@ -10,6 +10,7 @@ import '../../core/widgets/transaction_card.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
 import '../../shared/models/driver.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
@@ -23,13 +24,32 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
+  bool _isLoading = true;
   
-  // Dados mock - serão substituídos por dados reais depois
-  final Driver _driver = Driver(
-    name: 'João Silva',
-    monthlyGoal: 10000.0,
-    memberSince: DateTime(2024, 1, 1),
-  );
+  // Dados do motorista vindos do Supabase
+  Driver? _driver;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDriverData();
+  }
+
+  Future<void> _loadDriverData() async {
+    try {
+      final driver = await SupabaseService.getDriver();
+      if (mounted) {
+        setState(() {
+          _driver = driver;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   // Dados do dia atual (mock)
   final double _todayEarnings = 450.0;
@@ -79,6 +99,30 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final greeting = _getGreeting();
+
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_driver == null) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Erro ao carregar perfil.', style: TextStyle(color: Colors.white)),
+              TextButton(onPressed: _loadDriverData, child: const Text('Tentar novamente')),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: Container(
@@ -139,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           AppAvatar(
-            initials: _driver.name.split(' ').map((n) => n[0]).take(2).join(),
+            initials: _driver!.name.split(' ').map((n) => n[0]).take(2).join(),
             size: 50,
             onTap: () {
               context.push('/profile');
@@ -151,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$greeting, ${_driver.name.split(' ').first}',
+                  '$greeting, ${_driver!.name.split(' ').first}',
                   style: AppTypography.h3,
                 ),
                 const SizedBox(height: AppSpacing.xs),

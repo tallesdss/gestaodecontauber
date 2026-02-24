@@ -9,6 +9,7 @@ import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
 import '../../shared/models/expense.dart';
 
 enum FilterPeriod { today, week, month, custom }
@@ -24,99 +25,38 @@ class ExpensesListScreen extends StatefulWidget {
 class _ExpensesListScreenState extends State<ExpensesListScreen> {
   FilterPeriod _selectedPeriod = FilterPeriod.month;
   ExpenseCategory _selectedCategory = ExpenseCategory.all;
+  bool _isLoading = true;
+  final List<Expense> _expenses = [];
 
-  // Dados mock - serão substituídos por dados reais depois
-  final List<Expense> _expenses = [
-    Expense(
-      id: '1',
-      date: DateTime.now(),
-      category: 'Combustível',
-      value: 150.0,
-      description: 'Gasolina comum',
-      liters: 50.0,
-    ),
-    Expense(
-      id: '2',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      category: 'Manutenção',
-      value: 200.0,
-      description: 'Troca de óleo',
-    ),
-    Expense(
-      id: '3',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      category: 'Lavagem',
-      value: 30.0,
-      description: 'Lavagem completa',
-    ),
-    Expense(
-      id: '4',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      category: 'Combustível',
-      value: 120.0,
-      description: 'Gasolina aditivada',
-      liters: 40.0,
-    ),
-    Expense(
-      id: '5',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      category: 'Estacionamento',
-      value: 15.0,
-      description: 'Shopping Center',
-    ),
-    Expense(
-      id: '6',
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      category: 'Pedágio',
-      value: 45.0,
-      description: 'Pedágio rodovia',
-    ),
-    Expense(
-      id: '7',
-      date: DateTime.now().subtract(const Duration(days: 4)),
-      category: 'Manutenção',
-      value: 350.0,
-      description: 'Revisão completa',
-      notes: 'Inclui freios e pneus',
-    ),
-    Expense(
-      id: '8',
-      date: DateTime.now().subtract(const Duration(days: 5)),
-      category: 'Combustível',
-      value: 180.0,
-      description: 'Gasolina comum',
-      liters: 60.0,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
 
-  List<Expense> get _filteredExpenses {
+  Future<void> _loadExpenses() async {
+    setState(() => _isLoading = true);
+
+    DateTime? start;
+    DateTime? end = DateTime.now();
     final now = DateTime.now();
-    List<Expense> filtered = _expenses;
 
-    // Filtro por período
     switch (_selectedPeriod) {
       case FilterPeriod.today:
-        filtered = filtered.where((e) {
-          return e.date.year == now.year &&
-              e.date.month == now.month &&
-              e.date.day == now.day;
-        }).toList();
+        start = DateTime(now.year, now.month, now.day);
         break;
       case FilterPeriod.week:
-        final weekAgo = now.subtract(const Duration(days: 7));
-        filtered = filtered.where((e) => e.date.isAfter(weekAgo)).toList();
+        start = now.subtract(const Duration(days: 7));
         break;
       case FilterPeriod.month:
-        filtered = filtered.where((e) {
-          return e.date.year == now.year && e.date.month == now.month;
-        }).toList();
+        start = DateTime(now.year, now.month, 1);
         break;
       case FilterPeriod.custom:
-        // TODO: Implementar filtro personalizado
+        // TODO: Implementar custom range
         break;
     }
 
-    // Filtro por categoria
+    String? category;
     if (_selectedCategory != ExpenseCategory.all) {
       final categoryMap = {
         ExpenseCategory.fuel: 'Combustível',
@@ -126,14 +66,30 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
         ExpenseCategory.toll: 'Pedágio',
         ExpenseCategory.others: 'Outros',
       };
-      final categoryName = categoryMap[_selectedCategory];
-      filtered = filtered
-          .where((e) => e.category.toLowerCase() == categoryName?.toLowerCase())
-          .toList();
+      category = categoryMap[_selectedCategory];
     }
 
-    return filtered;
+    try {
+      final expenses = await SupabaseService.getExpenses(
+        start: start,
+        end: end,
+        category: category,
+      );
+      if (mounted) {
+        setState(() {
+          _expenses.clear();
+          _expenses.addAll(expenses);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+
+  List<Expense> get _filteredExpenses => _expenses;
 
   double get _totalExpenses {
     return _filteredExpenses.fold(0.0, (sum, expense) => sum + expense.value);
@@ -395,34 +351,39 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
 
               // Conteúdo scrollável
               Expanded(
-                child: filtered.isEmpty
-                    ? _buildEmptyState()
-                    : SingleChildScrollView(
-                        padding: AppSpacing.paddingXL,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Filtros por período
-                            _buildPeriodFilters(),
-                            const SizedBox(height: AppSpacing.lg),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadExpenses,
+                            child: SingleChildScrollView(
+                              padding: AppSpacing.paddingXL,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Filtros por período
+                                  _buildPeriodFilters(),
+                                  const SizedBox(height: AppSpacing.lg),
 
-                            // Filtros por categoria
-                            _buildCategoryFilters(),
-                            const SizedBox(height: AppSpacing.xl),
+                                  // Filtros por categoria
+                                  _buildCategoryFilters(),
+                                  const SizedBox(height: AppSpacing.xl),
 
-                            // Resumo do Período
-                            _buildPeriodSummary(),
-                            const SizedBox(height: AppSpacing.xl),
+                                  // Resumo do Período
+                                  _buildPeriodSummary(),
+                                  const SizedBox(height: AppSpacing.xl),
 
-                            // Gráfico de Gastos por Categoria
-                            _buildCategoryChart(),
-                            const SizedBox(height: AppSpacing.xl),
+                                  // Gráfico de Gastos por Categoria
+                                  _buildCategoryChart(),
+                                  const SizedBox(height: AppSpacing.xl),
 
-                            // Lista de Gastos
-                            _buildExpensesList(grouped),
-                          ],
-                        ),
-                      ),
+                                  // Lista de Gastos
+                                  _buildExpensesList(grouped),
+                                ],
+                              ),
+                            ),
+                          ),
               ),
             ],
           ),
@@ -481,9 +442,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Hoje',
                 isSelected: _selectedPeriod == FilterPeriod.today,
                 onTap: () {
-                  setState(() {
-                    _selectedPeriod = FilterPeriod.today;
-                  });
+                  setState(() => _selectedPeriod = FilterPeriod.today);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -491,9 +451,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Semana',
                 isSelected: _selectedPeriod == FilterPeriod.week,
                 onTap: () {
-                  setState(() {
-                    _selectedPeriod = FilterPeriod.week;
-                  });
+                  setState(() => _selectedPeriod = FilterPeriod.week);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -501,9 +460,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Mês',
                 isSelected: _selectedPeriod == FilterPeriod.month,
                 onTap: () {
-                  setState(() {
-                    _selectedPeriod = FilterPeriod.month;
-                  });
+                  setState(() => _selectedPeriod = FilterPeriod.month);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -542,9 +500,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Todos',
                 isSelected: _selectedCategory == ExpenseCategory.all,
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = ExpenseCategory.all;
-                  });
+                  setState(() => _selectedCategory = ExpenseCategory.all);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -553,9 +510,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 icon: Icons.local_gas_station,
                 isSelected: _selectedCategory == ExpenseCategory.fuel,
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = ExpenseCategory.fuel;
-                  });
+                  setState(() => _selectedCategory = ExpenseCategory.fuel);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -564,9 +520,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 icon: Icons.build,
                 isSelected: _selectedCategory == ExpenseCategory.maintenance,
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = ExpenseCategory.maintenance;
-                  });
+                  setState(() => _selectedCategory = ExpenseCategory.maintenance);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -575,9 +530,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 icon: Icons.local_car_wash,
                 isSelected: _selectedCategory == ExpenseCategory.carWash,
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = ExpenseCategory.carWash;
-                  });
+                  setState(() => _selectedCategory = ExpenseCategory.carWash);
+                  _loadExpenses();
                 },
               ),
               const SizedBox(width: AppSpacing.md),
@@ -585,9 +539,8 @@ class _ExpensesListScreenState extends State<ExpensesListScreen> {
                 label: 'Outros',
                 isSelected: _selectedCategory == ExpenseCategory.others,
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = ExpenseCategory.others;
-                  });
+                  setState(() => _selectedCategory = ExpenseCategory.others);
+                  _loadExpenses();
                 },
               ),
             ],

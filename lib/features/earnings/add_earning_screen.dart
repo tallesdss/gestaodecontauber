@@ -12,6 +12,8 @@ import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
+import '../../core/supabase/supabase_error_handler.dart';
 import '../../shared/models/earning.dart';
 
 class AddEarningScreen extends StatefulWidget {
@@ -123,13 +125,8 @@ class _AddEarningScreenState extends State<AddEarningScreen> {
         notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       );
 
-      // TODO: Salvar no banco de dados
-      // await DatabaseService.instance.addEarning(earning);
-      // ignore: unused_local_variable
-      final _ = earning; // Será usado quando o banco de dados for implementado
-
-      // Simular delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Salvar no Supabase
+      await SupabaseService.createEarning(earning);
 
       if (mounted) {
         context.pop();
@@ -144,7 +141,7 @@ class _AddEarningScreenState extends State<AddEarningScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao salvar: $e'),
+            content: Text(SupabaseErrorHandler.mapError(e)),
             backgroundColor: AppColors.error,
           ),
         );

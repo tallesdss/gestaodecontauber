@@ -9,6 +9,7 @@ import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
 import '../../shared/models/earning.dart';
 
 enum FilterPeriod { today, week, month, custom }
@@ -22,73 +23,58 @@ class EarningsListScreen extends StatefulWidget {
 
 class _EarningsListScreenState extends State<EarningsListScreen> {
   FilterPeriod _selectedPeriod = FilterPeriod.month;
-  
-  // Dados mock - serão substituídos por dados reais depois
-  final List<Earning> _earnings = [
-    Earning(
-      id: '1',
-      date: DateTime.now(),
-      value: 450.0,
-      platform: 'Uber',
-      numberOfRides: 15,
-      hoursWorked: 8.0,
-      notes: 'Dia produtivo',
-    ),
-    Earning(
-      id: '2',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      value: 380.0,
-      platform: '99',
-      numberOfRides: 12,
-      hoursWorked: 7.5,
-    ),
-    Earning(
-      id: '3',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      value: 320.0,
-      platform: 'Uber',
-      numberOfRides: 10,
-      hoursWorked: 6.0,
-    ),
-    Earning(
-      id: '4',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      value: 520.0,
-      platform: 'Uber',
-      numberOfRides: 18,
-      hoursWorked: 9.0,
-      notes: 'Melhor dia do mês!',
-    ),
-    Earning(
-      id: '5',
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      value: 290.0,
-      platform: 'InDrive',
-      numberOfRides: 8,
-      hoursWorked: 5.5,
-    ),
-  ];
+  bool _isLoading = true;
+  final List<Earning> _earnings = [];
 
-  List<Earning> get _filteredEarnings {
+  @override
+  void initState() {
+    super.initState();
+    _loadEarnings();
+  }
+
+  Future<void> _loadEarnings() async {
+    setState(() => _isLoading = true);
+    
+    DateTime? start;
+    DateTime? end = DateTime.now();
     final now = DateTime.now();
+
     switch (_selectedPeriod) {
       case FilterPeriod.today:
-        return _earnings.where((e) {
-          return e.date.year == now.year &&
-              e.date.month == now.month &&
-              e.date.day == now.day;
-        }).toList();
+        start = DateTime(now.year, now.month, now.day);
+        break;
       case FilterPeriod.week:
-        final weekAgo = now.subtract(const Duration(days: 7));
-        return _earnings.where((e) => e.date.isAfter(weekAgo)).toList();
+        start = now.subtract(const Duration(days: 7));
+        break;
       case FilterPeriod.month:
-        return _earnings.where((e) {
-          return e.date.year == now.year && e.date.month == now.month;
-        }).toList();
+        start = DateTime(now.year, now.month, 1);
+        break;
       case FilterPeriod.custom:
-        return _earnings; // TODO: Implementar filtro personalizado
+        // TODO: Implementar custom range
+        break;
+    }
+
+    try {
+      final earnings = await SupabaseService.getEarnings(
+        start: start,
+        end: end,
+      );
+      if (mounted) {
+        setState(() {
+          _earnings.clear();
+          _earnings.addAll(earnings);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        // Exibir erro se necessário
+      }
     }
   }
+
+  List<Earning> get _filteredEarnings => _earnings;
 
   double get _totalEarnings {
     return _filteredEarnings.fold(0.0, (sum, earning) => sum + earning.value);
@@ -312,26 +298,31 @@ class _EarningsListScreenState extends State<EarningsListScreen> {
               
               // Conteúdo scrollável
               Expanded(
-                child: filtered.isEmpty
-                    ? _buildEmptyState()
-                    : SingleChildScrollView(
-                        padding: AppSpacing.paddingXL,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Filtros
-                            _buildFilters(),
-                            const SizedBox(height: AppSpacing.xl),
-                            
-                            // Resumo do Período
-                            _buildPeriodSummary(),
-                            const SizedBox(height: AppSpacing.xl),
-                            
-                            // Lista de Ganhos
-                            _buildEarningsList(grouped),
-                          ],
-                        ),
-                      ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                        ? _buildEmptyState()
+                        : RefreshIndicator(
+                            onRefresh: _loadEarnings,
+                            child: SingleChildScrollView(
+                                padding: AppSpacing.paddingXL,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Filtros
+                                    _buildFilters(),
+                                    const SizedBox(height: AppSpacing.xl),
+                                    
+                                    // Resumo do Período
+                                    _buildPeriodSummary(),
+                                    const SizedBox(height: AppSpacing.xl),
+                                    
+                                    // Lista de Ganhos
+                                    _buildEarningsList(grouped),
+                                  ],
+                                ),
+                              ),
+                          ),
               ),
             ],
           ),
@@ -382,9 +373,8 @@ class _EarningsListScreenState extends State<EarningsListScreen> {
             label: 'Hoje',
             isSelected: _selectedPeriod == FilterPeriod.today,
             onTap: () {
-              setState(() {
-                _selectedPeriod = FilterPeriod.today;
-              });
+              setState(() => _selectedPeriod = FilterPeriod.today);
+              _loadEarnings();
             },
           ),
           const SizedBox(width: AppSpacing.md),
@@ -392,9 +382,8 @@ class _EarningsListScreenState extends State<EarningsListScreen> {
             label: 'Semana',
             isSelected: _selectedPeriod == FilterPeriod.week,
             onTap: () {
-              setState(() {
-                _selectedPeriod = FilterPeriod.week;
-              });
+              setState(() => _selectedPeriod = FilterPeriod.week);
+              _loadEarnings();
             },
           ),
           const SizedBox(width: AppSpacing.md),
@@ -402,9 +391,8 @@ class _EarningsListScreenState extends State<EarningsListScreen> {
             label: 'Mês',
             isSelected: _selectedPeriod == FilterPeriod.month,
             onTap: () {
-              setState(() {
-                _selectedPeriod = FilterPeriod.month;
-              });
+              setState(() => _selectedPeriod = FilterPeriod.month);
+              _loadEarnings();
             },
           ),
           const SizedBox(width: AppSpacing.md),
