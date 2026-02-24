@@ -4,9 +4,9 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
-## 🏗️ FASE 1: Infraestrutura e Acesso
+## 🏗️ FASE 1: Infraestrutura e Acesso [CONCLUÍDO]
 
-### [ ] 1.1. Splash Screen
+### [x] 1.1. Splash Screen
 *   **Funções Necessárias:**
     *   Verificação de estado de autenticação (logado ou não).
     *   Redirecionamento automático.
@@ -14,18 +14,18 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   `Session State`: Verifica se há um token JWT válido para pular o login.
 *   **Ações de Botões:** (Nenhum - Automático)
 
-### [ ] 1.2. Onboarding Screen
+### [x] 1.2. Onboarding Screen
 *   **Funções Necessárias:**
     *   Controle de páginas (PageController).
-)    *   Sinalização de "primeiro acesso concluído".
+    *   Sinalização de "primeiro acesso concluído".
 *   **Dados Dinâmicos:**
     *   `Slides Content`: Textos e imagens de introdução.
 *   **Ações de Botões:**
-    *   **Próximo:** Avança para o próximo slide.
+    *   **Próximo:** Avança para os próximos slides.
     *   **Pular:** Vai direto para a última página ou tela de Login.
     *   **Começar:** Redireciona para a Login Screen.
 
-### [ ] 1.3. Login Screen
+### [x] 1.3. Login Screen
 *   **Funções Necessárias:**
     *   Validação de formulário.
     *   Autenticação via Supabase (`AuthService.signIn`).
@@ -34,18 +34,19 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 *   **Ações de Botões:**
     *   **Entrar:** Executa o login.
     *   **Cadastre-se:** Navega para Register Screen.
-    *   **Esqueci a senha:** (A implementar).
+    *   **Esqueci a senha:** Adicionado placeholder funcional.
 
-### [ ] 1.4. Register Screen
+### [x] 1.4. Register Screen
 *   **Funções Necessárias:**
     *   Validação de formulário (nome, email, senha).
     *   Criação de conta no Supabase (`AuthService.signUp`).
-    *   Criação automática do perfil do motorista na tabela `drivers`.
+    *   Criação automática do perfil do motorista na tabela `drivers` (via sync no primeiro login).
 *   **Dados Dinâmicos:**
     *   `Auth UID`: Gerado pelo Supabase e vinculado ao novo Driver.
 *   **Ações de Botões:**
     *   **Criar Conta:** Executa o cadastro.
     *   **Voltar para Login:** Navega para Login Screen.
+
 
 ---
 

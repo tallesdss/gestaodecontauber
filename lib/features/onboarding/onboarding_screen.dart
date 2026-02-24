@@ -315,58 +315,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Campo: Meta mensal
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Meta mensal (R\$)',
-                  style: AppTypography.labelLarge,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TextFormField(
-                  controller: _goalController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [_goalMaskFormatter],
-                  style: AppTypography.bodyLarge,
-                  decoration: InputDecoration(
-                    hintText: 'R\$ 0,00',
-                    hintStyle: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.textTertiary,
-                    ),
-                    prefixIcon: const Icon(Icons.flag, color: AppColors.textSecondary),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: const OutlineInputBorder(
-                      borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                    errorBorder: const OutlineInputBorder(
-                      borderRadius: AppRadius.borderRadiusMD,
-                      borderSide: BorderSide(color: AppColors.error, width: 2),
-                    ),
-                    contentPadding: AppSpacing.paddingLG,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor, digite sua meta mensal';
-                    }
-                    final numericValue = CurrencyFormatter.parse(value);
-                    if (numericValue <= 0) {
-                      return 'Digite um valor maior que zero';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+            AppTextField(
+              label: 'Meta mensal (R$)',
+              hint: 'R$ 0,00',
+              controller: _goalController,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.flag,
+              inputFormatters: [_goalMaskFormatter],
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Por favor, digite sua meta mensal';
+                }
+                final numericValue = CurrencyFormatter.parse(value);
+                if (numericValue <= 0) {
+                  return 'Digite um valor maior que zero';
+                }
+                return null;
+              },
             ),
+
           ],
         ),
       ),

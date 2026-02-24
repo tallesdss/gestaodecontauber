@@ -5,6 +5,8 @@ import '../../core/supabase/supabase_error_handler.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/widgets/app_button.dart';
+import '../../core/widgets/app_text_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -100,13 +102,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 40),
 
                 // Name field
-                TextFormField(
+                AppTextField(
+                  label: 'Nome Completo',
+                  hint: 'Seu Nome',
                   controller: _nameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Nome Completo',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
+                  prefixIcon: Icons.person_outline,
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Informe seu nome';
                     return null;
@@ -115,14 +115,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // Email field
-                TextFormField(
+                AppTextField(
+                  label: 'E-mail',
+                  hint: 'seu@email.com',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
+                  prefixIcon: Icons.email_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Informe seu e-mail';
                     if (!value.contains('@')) return 'E-mail inválido';
@@ -132,20 +130,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // Password field
-                TextFormField(
+                AppTextField(
+                  label: 'Senha',
+                  hint: '••••••••',
                   controller: _passwordController,
                   obscureText: _obscurePassword,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Senha',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
+                  prefixIcon: Icons.lock_outline,
+                  suffixIcon: _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  onSuffixTap: () => setState(() => _obscurePassword = !_obscurePassword),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Informe sua senha';
                     if (value.length < 6) return 'A senha deve ter pelo menos 6 caracteres';
@@ -155,15 +147,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppSpacing.xxl),
 
                 // Register button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleRegister,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('CRIAR CONTA'),
+                AppButton(
+                  text: 'CRIAR CONTA',
+                  onPressed: _handleRegister,
+                  isLoading: _isLoading,
+                  size: ButtonSize.large,
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -176,7 +164,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     TextButton(
                       onPressed: () => context.go('/login'),
-                      child: const Text('Entre aqui'),
+                      child: const Text(
+                        'Entre aqui',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -188,3 +182,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+
