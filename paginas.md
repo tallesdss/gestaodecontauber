@@ -202,6 +202,121 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 ---
 
+## 📅 FASE 7: Histórico Financeiro
+
+Esta fase contempla a **Tela de Histórico**, que oferece ao motorista uma visão panorâmica do seu desempenho financeiro ao longo do tempo, permitindo análises por ano e mês com visual limpo e informativo.
+
+### [ ] 7.1. History Screen (Tela de Histórico)
+
+#### 🎯 Objetivo
+Proporcionar uma visão consolidada e navegável do histórico financeiro do motorista, exibindo Ganhos, Gastos e Lucro de forma organizada por período (ano/mês), permitindo identificar tendências e comparar desempenho ao longo do tempo.
+
+---
+
+#### 🔽 Filtro Superior (Barra de Período)
+*   **Componentes de UI:**
+    *   **Seletor de Ano:** Dropdown ou botões de seta (← Ano →) para navegar entre anos disponíveis.
+    *   **Seletor de Mês:** Row horizontal com chips scrolláveis (Jan, Fev, Mar... Dez) — o mês atual selecionado fica destacado.
+    *   **Botão "Limpar Filtro" / "Ver Tudo":** Reseta para exibir o consolidado anual.
+*   **Comportamento:**
+    *   Ao alterar o Ano, os chips de Mês são recarregados e os cards abaixo são atualizados.
+    *   Ao selecionar um Mês específico, os cards e a lista exibem os dados daquele mês/ano.
+    *   Se nenhum mês for selecionado, exibe o consolidado anual.
+
+---
+
+#### 📊 Cards de Resumo Financeiro (Logo abaixo dos filtros)
+Três cards em destaque exibindo o panorama do período selecionado:
+
+| Card | Cor | Dado exibido |
+|------|-----|-------------|
+| 💚 Ganhos | Verde | Total de recebimentos no período |
+| 🔴 Gastos | Vermelho | Total de despesas no período |
+| 🔵 Lucro | Azul/Roxo | Ganhos − Gastos (pode ser negativo) |
+
+*   **Dados Dinâmicos:**
+    *   `Total de Ganhos do Período`: Soma de todos os registros de ganhos no mês/ano filtrado, via RPC `get_earnings_summary(year, month)`.
+    *   `Total de Gastos do Período`: Soma de todos os registros de despesas no mês/ano filtrado, via RPC `get_expenses_summary(year, month)`.
+    *   `Lucro Líquido`: Calculado no front como `ganhos - gastos`; exibido em verde se positivo, vermelho se negativo.
+    *   `Variação (%)`: Comparação opcional com o período anterior (ex: +12% em relação ao mês passado), exibida abaixo de cada valor principal.
+
+---
+
+#### 📋 Lista de Meses / Breakdown Anual
+Quando **nenhum mês** estiver selecionado (visão anual), exibir uma lista com todos os meses do ano, mostrando para cada mês:
+*   Mês e Ano (ex: "Janeiro 2025")
+*   Mini-bar horizontal proporcional ao Lucro
+*   Valores compactos: Ganho | Gasto | Lucro
+
+Quando um **mês específico** estiver selecionado, exibir:
+*   Breakdown por semana do mês (Semana 1, Semana 2, etc.)
+*   Cada semana exibe o consolidado de Ganhos, Gastos e Lucro.
+*   Lista de transações recentes do período (últimos 5 registros, agrupados por data).
+
+---
+
+#### 🔧 Funções Necessárias
+*   `_loadHistorySummary(year, month?)`: Busca os totais de Ganhos, Gastos e Lucro via RPCs existentes filtradas por período.
+    *   Parâmetro `month` opcional: se `null`, retorna o consolidado anual.
+*   `_loadAvailableYears()`: Busca os anos distintos em que o motorista possui registros para popular o seletor de ano.
+*   `_loadMonthlyBreakdown(year)`: Para a visão anual, busca o resumo mês a mês do ano selecionado.
+*   `_loadWeeklyBreakdown(year, month)`: Para a visão mensal, busca o resumo semana a semana.
+*   `_calculateVariation(current, previous)`: Calcula a variação percentual em relação ao período anterior.
+
+---
+
+#### 💾 Dados Dinâmicos (Fontes de Dados)
+*   `Anos disponíveis`: Query `SELECT DISTINCT EXTRACT(YEAR FROM date) FROM earnings UNION SELECT DISTINCT EXTRACT(YEAR FROM date) FROM expenses ORDER BY 1 DESC`.
+*   `Totais por período`: RPCs `get_earnings_summary` e `get_expenses_summary` (já existentes ou a criar), recebendo `(driver_id, year, month?)`.
+*   `Breakdown mensal`: RPC `get_monthly_breakdown(driver_id, year)` retornando array com resumo por mês.
+*   `Breakdown semanal`: RPC `get_weekly_breakdown(driver_id, year, month)` retornando array com resumo por semana.
+
+---
+
+#### 📤 Seção de Exportação
+Localizada no final da tela (ou via botão flutuante / ícone no AppBar):
+
+**Exportar como PDF:**
+*   Gera um relatório formatado do período selecionado contendo:
+    *   Cabeçalho: Logo do app, Nome do Motorista, Período (Mês/Ano ou Ano).
+    *   Cards de resumo (Ganhos, Gastos, Lucro).
+    *   Tabela com todas as transações do período (Data, Tipo, Valor, Descrição/Plataforma).
+    *   Rodapé: Data de geração do relatório.
+*   **Lib sugerida:** `pdf` + `printing` (já possível usar `printing` para compartilhar).
+
+**Exportar como Excel (.xlsx):**
+*   Gera uma planilha com abas separadas:
+    *   **Aba "Resumo":** Cards de Ganhos, Gastos, Lucro e variação.
+    *   **Aba "Ganhos":** Todas as linhas de ganhos no período (Date, Platform, Hours, Trips, Value).
+    *   **Aba "Gastos":** Todas as linhas de gastos no período (Date, Category, Description, Value).
+*   **Lib sugerida:** `syncfusion_flutter_xlsio` ou `excel` (pub.dev).
+
+**Botões de Acção:**
+*   **Exportar PDF:** Abre `Share` ou salva localmente e abre visualizador de PDF nativo.
+*   **Exportar Excel:** Salva o arquivo `.xlsx` nos Downloads e exibe snackbar de confirmação com opção "Abrir".
+*   **Compartilhar:** Usa `share_plus` para enviar o arquivo gerado (PDF ou Excel) via apps instalados (WhatsApp, e-mail, etc.).
+
+---
+
+#### 🎬 Ações de Botões
+*   **Setas de Ano (← →):** Decrementa/incrementa o ano e recarrega todos os dados.
+*   **Chip de Mês:** Seleciona o mês; nova consulta dispara automaticamente.
+*   **"Ver Tudo" / Limpar Mês:** Remove o filtro de mês, volta para visão anual.
+*   **Item de Mês (visão anual):** Tap seleciona aquele mês, entrando na visão mensal.
+*   **Botão "Exportar PDF":** Gera e abre/compartilha o PDF do período selecionado.
+*   **Botão "Exportar Excel":** Gera e salva o arquivo `.xlsx` do período selecionado.
+*   **Botão "Compartilhar":** Usa share_plus para permitir compartilhamento do arquivo.
+*   **Voltar (AppBar):** Retorna à tela anterior (Home ou Profile).
+
+---
+
+#### 🧩 Navegação
+*   Acessível a partir da **Home Screen** (botão no menu rápido ou Card de Lucro com opção "Ver Histórico").
+*   Acessível a partir da **Profile Screen** (botão "Histórico" próximo às estatísticas de vida).
+*   Rota sugerida: `/history` no `app_router.dart`.
+
+---
+
 ## ⚙️ FASE 6: Configurações e Extras
 
 ### [ ] 6.1. Metas (Goals Screen)
