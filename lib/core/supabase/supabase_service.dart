@@ -4,6 +4,7 @@ import 'supabase_field_mapping.dart';
 import '../../shared/models/driver.dart';
 import '../../shared/models/earning.dart';
 import '../../shared/models/expense.dart';
+import '../../shared/models/notification.dart';
 import 'dart:typed_data';
 
 class SupabaseService {
@@ -370,7 +371,83 @@ class SupabaseService {
         'totalValue': (data['total_value'] as num?)?.toDouble() ?? 0.0,
       }).toList();
     }
-
     return [];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Notifications
+  // ---------------------------------------------------------------------------
+
+  /// Lista notificações do usuário logado.
+  static Future<List<AppNotification>> getNotifications({
+    int from = 0,
+    int to = 49,
+  }) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await supabaseClient
+        .from('notifications')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .range(from, to);
+
+    return (response as List).map((map) {
+      final dartMap = SupabaseFieldMapping.fromSupabaseMap(
+        map,
+        SupabaseFieldMapping.notificationsSupabaseToDart,
+      );
+      return AppNotification.fromMap(dartMap);
+    }).toList();
+  }
+
+  /// Marca uma notificação como lida.
+  static Future<void> markNotificationAsRead(String id) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw Exception('Não autenticado');
+
+    await supabaseClient
+        .from('notifications')
+        .update({'is_read': true})
+        .eq('id', id)
+        .eq('user_id', userId);
+  }
+
+  /// Marca todas as notificações como lidas.
+  static Future<void> markAllNotificationsAsRead() async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw Exception('Não autenticado');
+
+    await supabaseClient
+        .from('notifications')
+        .update({'is_read': true})
+        .eq('user_id', userId);
+  }
+
+  /// Deleta uma notificação.
+  static Future<void> deleteNotification(String id) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) throw Exception('Não autenticado');
+
+    await supabaseClient
+        .from('notifications')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+  }
+
+  /// Conta notificações não lidas.
+  static Future<int> getUnreadNotificationsCount() async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) return 0;
+
+    final response = await supabaseClient
+        .from('notifications')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+    return response.length;
   }
 }

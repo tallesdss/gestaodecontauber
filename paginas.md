@@ -65,7 +65,7 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
     *   `Avatar`: Iniciais baseadas no nome do motorista vindo do banco.
 *   **Ações de Botões:**
     *   **Avatar:** Navega para Perfil.
-    *   **Sininho:** (Placeholder) Abre notificações.
+    *   **Sininho:** Abre a lista de notificações (com badge de não lidas).
     *   **Card Ganhos:** Navega para Meus Ganhos.
     *   **Card Gastos:** Navega para Meus Gastos.
     *   **Card Lucro:** Navega para Relatórios.

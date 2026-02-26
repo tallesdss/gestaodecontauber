@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_radius.dart';
+import '../../core/supabase/supabase_service.dart';
+import '../../shared/models/notification.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/app_card.dart';
-import '../../core/widgets/app_top_bar.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -14,406 +16,252 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  // Configurações de notificações
-  bool _enableNotifications = true;
-  bool _enableSound = true;
-  bool _enableVibration = true;
-  bool _enableReminders = true;
-  bool _enableReports = false;
-  bool _enableGoals = true;
-  bool _enableBackup = false;
+  bool _isLoading = true;
+  List<AppNotification> _notifications = [];
 
-  // Horários de lembretes
-  String _reminderTime = '20:00';
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final notifications = await SupabaseService.getNotifications();
+      if (mounted) {
+        setState(() {
+          _notifications = notifications;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar notificações: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _markAsRead(AppNotification notification) async {
+    if (notification.isRead) return;
+    
+    try {
+      await SupabaseService.markNotificationAsRead(notification.id);
+      _loadNotifications();
+    } catch (e) {
+      debugPrint('Erro ao marcar como lida: $e');
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    try {
+      await SupabaseService.markAllNotificationsAsRead();
+      _loadNotifications();
+    } catch (e) {
+      debugPrint('Erro ao marcar todas como lidas: $e');
+    }
+  }
+
+  Future<void> _deleteNotification(String id) async {
+    try {
+      await SupabaseService.deleteNotification(id);
+      _loadNotifications();
+    } catch (e) {
+      debugPrint('Erro ao deletar notificação: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      appBar: const AppTopBar(
-        title: 'Notificações',
-        showBackButton: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.backgroundDark,
+              AppColors.backgroundMedium,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _notifications.isEmpty
+                        ? _buildEmptyState()
+                        : _buildNotificationsList(),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: AppSpacing.paddingXL,
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          Expanded(
+            child: Text(
+              'Notificações',
+              style: AppTypography.h3,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
+            onPressed: () {
+              context.push('/notifications/settings');
+            },
+          ),
+          if (_notifications.any((n) => !n.isRead))
+            TextButton(
+              onPressed: _markAllAsRead,
+              child: Text(
+                'Ler todas',
+                style: AppTypography.labelLarge.copyWith(color: AppColors.primary),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.notifications_off_outlined,
+            size: 80,
+            color: AppColors.textTertiary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Text(
+            'Nenhuma notificação por aqui',
+            style: AppTypography.h4.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Avisaremos você quando algo importante acontecer.',
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsList() {
+    return RefreshIndicator(
+      onRefresh: _loadNotifications,
+      child: ListView.builder(
         padding: AppSpacing.paddingXL,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Card de informações
-            _buildInfoCard(),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Notificações gerais
-            Text(
-              'Notificações Gerais',
-              style: AppTypography.h4,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            _buildNotificationToggle(
-              icon: Icons.notifications_active,
-              title: 'Ativar Notificações',
-              subtitle: 'Receber notificações do app',
-              value: _enableNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _enableNotifications = value;
-                  if (!value) {
-                    _enableSound = false;
-                    _enableVibration = false;
-                    _enableReminders = false;
-                    _enableReports = false;
-                    _enableGoals = false;
-                    _enableBackup = false;
-                  }
-                });
-                // TODO: Implementar controle de notificações
-              },
-            ),
-
-            if (_enableNotifications) ...[
-              const SizedBox(height: AppSpacing.md),
-              _buildNotificationToggle(
-                icon: Icons.volume_up,
-                title: 'Som',
-                subtitle: 'Tocar som nas notificações',
-                value: _enableSound,
-                onChanged: (value) {
-                  setState(() {
-                    _enableSound = value;
-                  });
-                  // TODO: Implementar controle de som
-                },
+        itemCount: _notifications.length,
+        itemBuilder: (context, index) {
+          final notification = _notifications[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Dismissible(
+              key: Key(notification.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: AppColors.expenses.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.delete_outline, color: AppColors.expenses),
               ),
-              const SizedBox(height: AppSpacing.md),
-              _buildNotificationToggle(
-                icon: Icons.vibration,
-                title: 'Vibração',
-                subtitle: 'Vibrar ao receber notificações',
-                value: _enableVibration,
-                onChanged: (value) {
-                  setState(() {
-                    _enableVibration = value;
-                  });
-                  // TODO: Implementar controle de vibração
-                },
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Tipos de notificações
-            if (_enableNotifications) ...[
-              Text(
-                'Tipos de Notificações',
-                style: AppTypography.h4,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              _buildNotificationToggle(
-                icon: Icons.access_time,
-                title: 'Lembretes Diários',
-                subtitle: 'Lembrar de registrar ganhos e gastos',
-                value: _enableReminders,
-                onChanged: (value) {
-                  setState(() {
-                    _enableReminders = value;
-                  });
-                  // TODO: Implementar lembretes
-                },
-              ),
-
-              if (_enableReminders) ...[
-                const SizedBox(height: AppSpacing.md),
-                _buildTimeSelector(),
-              ],
-
-              const SizedBox(height: AppSpacing.md),
-              _buildNotificationToggle(
-                icon: Icons.bar_chart,
-                title: 'Relatórios',
-                subtitle: 'Notificações sobre relatórios mensais',
-                value: _enableReports,
-                onChanged: (value) {
-                  setState(() {
-                    _enableReports = value;
-                  });
-                  // TODO: Implementar notificações de relatórios
-                },
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-              _buildNotificationToggle(
-                icon: Icons.flag,
-                title: 'Metas',
-                subtitle: 'Avisos sobre progresso das metas',
-                value: _enableGoals,
-                onChanged: (value) {
-                  setState(() {
-                    _enableGoals = value;
-                  });
-                  // TODO: Implementar notificações de metas
-                },
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-              _buildNotificationToggle(
-                icon: Icons.backup,
-                title: 'Backup',
-                subtitle: 'Lembretes para fazer backup',
-                value: _enableBackup,
-                onChanged: (value) {
-                  setState(() {
-                    _enableBackup = value;
-                  });
-                  // TODO: Implementar notificações de backup
-                },
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Teste de notificação
-            if (_enableNotifications)
-              AppCard(
+              onDismissed: (_) => _deleteNotification(notification.id),
+              child: AppCard(
+                onTap: () => _markAsRead(notification),
                 padding: AppSpacing.paddingLG,
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withAlpha((0.2 * 255).round()),
-                            borderRadius: AppRadius.borderRadiusMD,
-                          ),
-                          child: const Icon(
-                            Icons.notification_important,
-                            color: AppColors.accent,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: notification.type.color.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        notification.type.icon,
+                        color: notification.type.color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Testar Notificação',
-                                style: AppTypography.labelLarge,
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                'Enviar uma notificação de teste',
-                                style: AppTypography.caption.copyWith(
-                                  color: AppColors.textSecondary,
+                              Expanded(
+                                child: Text(
+                                  notification.title,
+                                  style: AppTypography.labelLarge.copyWith(
+                                    fontWeight: notification.isRead
+                                        ? FontWeight.normal
+                                        : FontWeight.bold,
+                                  ),
                                 ),
                               ),
+                              if (!notification.isRead)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.earnings,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Implementar teste de notificação
-                          _showSnackBar(context, 'Notificação de teste enviada!');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          padding: AppSpacing.paddingLG,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: AppRadius.borderRadiusMD,
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            notification.message,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          'Enviar Teste',
-                          style: AppTypography.button,
-                        ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            DateFormatter.formatFullDate(notification.createdAt),
+                            style: AppTypography.caption.copyWith(
+                              fontSize: 10,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-
-            const SizedBox(height: AppSpacing.xl),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard() {
-    return AppCard(
-      padding: AppSpacing.paddingLG,
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline,
-            color: AppColors.info,
-            size: 24,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              'Configure como e quando você deseja receber notificações do app.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationToggle({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return AppCard(
-      padding: AppSpacing.paddingLG,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha((0.2 * 255).round()),
-              borderRadius: AppRadius.borderRadiusMD,
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.labelLarge,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  subtitle,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeSelector() {
-    return AppCard(
-      padding: AppSpacing.paddingLG,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Horário do Lembrete',
-            style: AppTypography.labelMedium,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          InkWell(
-            onTap: () => _selectTime(context),
-            child: Container(
-              padding: AppSpacing.paddingLG,
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundDark,
-                borderRadius: AppRadius.borderRadiusMD,
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.access_time,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      _reminderTime,
-                      style: AppTypography.bodyMedium,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textTertiary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final timeParts = _reminderTime.split(':');
-    final initialTime = TimeOfDay(
-      hour: int.parse(timeParts[0]),
-      minute: int.parse(timeParts[1]),
-    );
-
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: AppColors.textPrimary,
-              surface: AppColors.surface,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _reminderTime =
-            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-      });
-      // TODO: Salvar horário do lembrete
-    }
-  }
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.surface,
-        behavior: SnackBarBehavior.floating,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusMD,
-        ),
+          );
+        },
       ),
     );
   }
 }
-

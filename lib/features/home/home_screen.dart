@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ChartDataPoint> _weeklyEarnings = [];
   List<ChartDataPoint> _weeklyExpenses = [];
   List<ChartDataPoint> _weeklyProfit = [];
+  int _unreadNotifications = 0;
 
   // Subscription para realtime
   RealtimeChannel? _earningsSubscription;
@@ -109,6 +110,24 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         )
         .subscribe();
+
+    // Escuta mudanças na tabela de notificações
+    supabaseClient
+        .channel('public:notifications')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) {
+            _loadUnreadNotifications();
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _loadAllData() async {
@@ -118,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _loadTotals(),
       _loadRecentActivities(),
       _loadWeeklyData(),
+      _loadUnreadNotifications(),
     ]);
     if (mounted) {
       setState(() => _isLoading = false);
@@ -209,6 +229,19 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       debugPrint('Erro ao carregar dados semanais: $e');
+    }
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final count = await SupabaseService.getUnreadNotificationsCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotifications = count;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar notificações não lidas: $e');
     }
   }
 
@@ -331,14 +364,45 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.textPrimary,
-            ),
-            onPressed: () {
-              // TODO: Implementar notificações
-            },
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () async {
+                  await context.push('/notifications');
+                  _loadUnreadNotifications();
+                },
+              ),
+              if (_unreadNotifications > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: AppColors.earnings,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.backgroundDark, width: 1.5),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotifications > 9 ? '9+' : _unreadNotifications.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

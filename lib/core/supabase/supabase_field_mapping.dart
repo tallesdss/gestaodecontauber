@@ -152,4 +152,29 @@ class SupabaseFieldMapping {
     'createdAt': 'created_at',
     'updatedAt': 'updated_at',
   };
+  // ---------------------------------------------------------------------------
+  // notifications
+  // ---------------------------------------------------------------------------
+
+  /// Coluna Supabase → campo Dart
+  static const Map<String, String> notificationsSupabaseToDart = {
+    'id': 'id',
+    'user_id': 'userId',
+    'title': 'title',
+    'message': 'message',
+    'type': 'type',
+    'is_read': 'isRead',
+    'created_at': 'createdAt',
+  };
+
+  /// Campo Dart → coluna Supabase
+  static const Map<String, String> notificationsDartToSupabase = {
+    'id': 'id',
+    'userId': 'user_id',
+    'title': 'title',
+    'message': 'message',
+    'type': 'type',
+    'isRead': 'is_read',
+    'createdAt': 'created_at',
+  };
 }

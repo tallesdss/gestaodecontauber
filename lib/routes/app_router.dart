@@ -24,6 +24,7 @@ import '../features/backup/backup_screen.dart';
 import '../features/export/export_data_screen.dart';
 import '../features/theme/theme_screen.dart';
 import '../features/notifications/notifications_screen.dart';
+import '../features/notifications/notification_settings_screen.dart';
 import '../features/help/help_screen.dart';
 
 class AppRouter {
@@ -139,6 +140,10 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/notifications/settings',
+        builder: (context, state) => const NotificationSettingsScreen(),
       ),
       GoRoute(
         path: '/help',
