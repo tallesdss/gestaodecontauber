@@ -214,7 +214,7 @@ Esta fase contempla a **Tela de Histórico**, que oferece ao motorista uma visã
 
 ## 📅 FASE 7 — ETAPA A: Frontend com Dados Mockup
 
-### [ ] 7.A.1. History Screen — Estrutura Visual (UI com dados estáticos)
+### [x] 7.A.1. History Screen — Estrutura Visual (UI com dados estáticos)
 
 #### 🎯 Objetivo
 Construir toda a estrutura visual da Tela de Histórico com dados **hardcoded / mockup**, garantindo que o layout, componentes e navegação estejam 100% funcionais antes de conectar qualquer fonte de dados real.

@@ -307,6 +307,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: AppSpacing.md),
         _buildMenuOption(
           context: context,
+          icon: Icons.history,
+          title: 'Histórico',
+          subtitle: 'Histórico financeiro anual e mensal',
+          onTap: () {
+            context.push('/history');
+          },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildMenuOption(
+          context: context,
           icon: Icons.notifications,
           title: 'Notificações',
           subtitle: 'Gerenciar notificações',

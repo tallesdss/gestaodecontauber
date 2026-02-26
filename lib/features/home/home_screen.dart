@@ -514,7 +514,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: 'Histórico',
                 color: AppColors.maintenance,
                 onTap: () {
-                  // TODO: Implementar histórico
+                  context.push('/history');
                 },
               ),
             ),

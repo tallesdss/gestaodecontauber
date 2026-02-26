@@ -26,6 +26,7 @@ import '../features/theme/theme_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/notifications/notification_settings_screen.dart';
 import '../features/help/help_screen.dart';
+import '../features/history/history_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -148,6 +149,10 @@ class AppRouter {
       GoRoute(
         path: '/help',
         builder: (context, state) => const HelpScreen(),
+      ),
+      GoRoute(
+        path: '/history',
+        builder: (context, state) => const HistoryScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
