@@ -206,114 +206,195 @@ Este documento serve como um checklist para garantir que todas as páginas do ap
 
 Esta fase contempla a **Tela de Histórico**, que oferece ao motorista uma visão panorâmica do seu desempenho financeiro ao longo do tempo, permitindo análises por ano e mês com visual limpo e informativo.
 
-### [ ] 7.1. History Screen (Tela de Histórico)
+> A fase 7 está dividida em **duas etapas**:
+> - **Etapa A** → Construção completa do frontend com dados mockup (estáticos).
+> - **Etapa B** → Substituição de todos os dados mockup por dados reais vindos do backend Supabase.
+
+---
+
+## 📅 FASE 7 — ETAPA A: Frontend com Dados Mockup
+
+### [ ] 7.A.1. History Screen — Estrutura Visual (UI com dados estáticos)
 
 #### 🎯 Objetivo
-Proporcionar uma visão consolidada e navegável do histórico financeiro do motorista, exibindo Ganhos, Gastos e Lucro de forma organizada por período (ano/mês), permitindo identificar tendências e comparar desempenho ao longo do tempo.
+Construir toda a estrutura visual da Tela de Histórico com dados **hardcoded / mockup**, garantindo que o layout, componentes e navegação estejam 100% funcionais antes de conectar qualquer fonte de dados real.
 
 ---
 
-#### 🔽 Filtro Superior (Barra de Período)
+#### 🔽 Filtro Superior (Barra de Período) — Mockup
 *   **Componentes de UI:**
-    *   **Seletor de Ano:** Dropdown ou botões de seta (← Ano →) para navegar entre anos disponíveis.
+    *   **Seletor de Ano:** Botões de seta (← Ano →) — navegar entre anos mockup (`[2023, 2024, 2025]`).
     *   **Seletor de Mês:** Row horizontal com chips scrolláveis (Jan, Fev, Mar... Dez) — o mês atual selecionado fica destacado.
     *   **Botão "Limpar Filtro" / "Ver Tudo":** Reseta para exibir o consolidado anual.
-*   **Comportamento:**
-    *   Ao alterar o Ano, os chips de Mês são recarregados e os cards abaixo são atualizados.
-    *   Ao selecionar um Mês específico, os cards e a lista exibem os dados daquele mês/ano.
-    *   Se nenhum mês for selecionado, exibe o consolidado anual.
+*   **Dados Mockup:**
+    *   Anos disponíveis fixos: `[2023, 2024, 2025]`.
+    *   Mês inicial padrão: mês atual (`DateTime.now().month`).
+*   **Comportamento esperado (sem backend):**
+    *   Ao alterar Ano ou Mês, os cards abaixo devem atualizar com valores mockup correspondentes.
+    *   Transições suaves entre estados (loading → dados).
 
 ---
 
-#### 📊 Cards de Resumo Financeiro (Logo abaixo dos filtros)
+#### 📊 Cards de Resumo Financeiro — Mockup
 Três cards em destaque exibindo o panorama do período selecionado:
 
-| Card | Cor | Dado exibido |
+| Card | Cor | Dado Mockup |
 |------|-----|-------------|
-| 💚 Ganhos | Verde | Total de recebimentos no período |
-| 🔴 Gastos | Vermelho | Total de despesas no período |
-| 🔵 Lucro | Azul/Roxo | Ganhos − Gastos (pode ser negativo) |
+| 💚 Ganhos | Verde | R$ 3.250,00 |
+| 🔴 Gastos | Vermelho | R$ 980,00 |
+| 🔵 Lucro | Azul/Roxo | R$ 2.270,00 |
 
-*   **Dados Dinâmicos:**
-    *   `Total de Ganhos do Período`: Soma de todos os registros de ganhos no mês/ano filtrado, via RPC `get_earnings_summary(year, month)`.
-    *   `Total de Gastos do Período`: Soma de todos os registros de despesas no mês/ano filtrado, via RPC `get_expenses_summary(year, month)`.
-    *   `Lucro Líquido`: Calculado no front como `ganhos - gastos`; exibido em verde se positivo, vermelho se negativo.
-    *   `Variação (%)`: Comparação opcional com o período anterior (ex: +12% em relação ao mês passado), exibida abaixo de cada valor principal.
-
----
-
-#### 📋 Lista de Meses / Breakdown Anual
-Quando **nenhum mês** estiver selecionado (visão anual), exibir uma lista com todos os meses do ano, mostrando para cada mês:
-*   Mês e Ano (ex: "Janeiro 2025")
-*   Mini-bar horizontal proporcional ao Lucro
-*   Valores compactos: Ganho | Gasto | Lucro
-
-Quando um **mês específico** estiver selecionado, exibir:
-*   Breakdown por semana do mês (Semana 1, Semana 2, etc.)
-*   Cada semana exibe o consolidado de Ganhos, Gastos e Lucro.
-*   Lista de transações recentes do período (últimos 5 registros, agrupados por data).
+*   **Dados Mockup:**
+    *   Valores fixos por período selecionado (podem ser constantes ou um `Map<String, double>` mockup por mês).
+    *   `Variação (%)`: Exibir valor fixo, ex: `+12%` para todos os períodos mockup.
+    *   Lucro: `ganhos - gastos` calculado no front com os valores mockup.
 
 ---
 
-#### 🔧 Funções Necessárias
-*   `_loadHistorySummary(year, month?)`: Busca os totais de Ganhos, Gastos e Lucro via RPCs existentes filtradas por período.
-    *   Parâmetro `month` opcional: se `null`, retorna o consolidado anual.
-*   `_loadAvailableYears()`: Busca os anos distintos em que o motorista possui registros para popular o seletor de ano.
-*   `_loadMonthlyBreakdown(year)`: Para a visão anual, busca o resumo mês a mês do ano selecionado.
-*   `_loadWeeklyBreakdown(year, month)`: Para a visão mensal, busca o resumo semana a semana.
-*   `_calculateVariation(current, previous)`: Calcula a variação percentual em relação ao período anterior.
+#### 📋 Lista de Meses / Breakdown — Mockup
+
+**Visão Anual (nenhum mês selecionado):**
+*   Lista com 12 meses fixos, cada um exibindo:
+    *   Nome do mês + ano mockup.
+    *   Mini-bar horizontal proporcional ao lucro (usar valores mockup).
+    *   Valores compactos mockup: `Ganho | Gasto | Lucro`.
+
+**Visão Mensal (mês selecionado):**
+*   Breakdown por semana (Semana 1 a 4/5) com valores mockup.
+*   Lista mockup com 5 transações recentes agrupadas por data.
 
 ---
 
-#### 💾 Dados Dinâmicos (Fontes de Dados)
-*   `Anos disponíveis`: Query `SELECT DISTINCT EXTRACT(YEAR FROM date) FROM earnings UNION SELECT DISTINCT EXTRACT(YEAR FROM date) FROM expenses ORDER BY 1 DESC`.
-*   `Totais por período`: RPCs `get_earnings_summary` e `get_expenses_summary` (já existentes ou a criar), recebendo `(driver_id, year, month?)`.
-*   `Breakdown mensal`: RPC `get_monthly_breakdown(driver_id, year)` retornando array com resumo por mês.
-*   `Breakdown semanal`: RPC `get_weekly_breakdown(driver_id, year, month)` retornando array com resumo por semana.
+#### 📤 Seção de Exportação — UI Apenas
+*   Exibir os botões de exportação **como placeholders visuais** (sem funcionalidade real nesta etapa):
+    *   **Botão "Exportar PDF":** Exibe um `SnackBar` com `"Funcionalidade em breve"`.
+    *   **Botão "Exportar Excel":** Exibe um `SnackBar` com `"Funcionalidade em breve"`.
+    *   **Botão "Compartilhar":** Exibe um `SnackBar` com `"Funcionalidade em breve"`.
 
 ---
 
-#### 📤 Seção de Exportação
-Localizada no final da tela (ou via botão flutuante / ícone no AppBar):
-
-**Exportar como PDF:**
-*   Gera um relatório formatado do período selecionado contendo:
-    *   Cabeçalho: Logo do app, Nome do Motorista, Período (Mês/Ano ou Ano).
-    *   Cards de resumo (Ganhos, Gastos, Lucro).
-    *   Tabela com todas as transações do período (Data, Tipo, Valor, Descrição/Plataforma).
-    *   Rodapé: Data de geração do relatório.
-*   **Lib sugerida:** `pdf` + `printing` (já possível usar `printing` para compartilhar).
-
-**Exportar como Excel (.xlsx):**
-*   Gera uma planilha com abas separadas:
-    *   **Aba "Resumo":** Cards de Ganhos, Gastos, Lucro e variação.
-    *   **Aba "Ganhos":** Todas as linhas de ganhos no período (Date, Platform, Hours, Trips, Value).
-    *   **Aba "Gastos":** Todas as linhas de gastos no período (Date, Category, Description, Value).
-*   **Lib sugerida:** `syncfusion_flutter_xlsio` ou `excel` (pub.dev).
-
-**Botões de Acção:**
-*   **Exportar PDF:** Abre `Share` ou salva localmente e abre visualizador de PDF nativo.
-*   **Exportar Excel:** Salva o arquivo `.xlsx` nos Downloads e exibe snackbar de confirmação com opção "Abrir".
-*   **Compartilhar:** Usa `share_plus` para enviar o arquivo gerado (PDF ou Excel) via apps instalados (WhatsApp, e-mail, etc.).
-
----
-
-#### 🎬 Ações de Botões
-*   **Setas de Ano (← →):** Decrementa/incrementa o ano e recarrega todos os dados.
-*   **Chip de Mês:** Seleciona o mês; nova consulta dispara automaticamente.
-*   **"Ver Tudo" / Limpar Mês:** Remove o filtro de mês, volta para visão anual.
-*   **Item de Mês (visão anual):** Tap seleciona aquele mês, entrando na visão mensal.
-*   **Botão "Exportar PDF":** Gera e abre/compartilha o PDF do período selecionado.
-*   **Botão "Exportar Excel":** Gera e salva o arquivo `.xlsx` do período selecionado.
-*   **Botão "Compartilhar":** Usa share_plus para permitir compartilhamento do arquivo.
+#### 🎬 Ações de Botões (Etapa A)
+*   **Setas de Ano (← →):** Navega pelos anos mockup e atualiza os cards/lista com dados estáticos.
+*   **Chip de Mês:** Seleciona o mês e exibe o breakdown mockup correspondente.
+*   **"Ver Tudo" / Limpar Mês:** Volta para a visão anual com lista mockup de 12 meses.
+*   **Item de Mês (visão anual):** Tap seleciona o mês, exibindo o breakdown semanal mockup.
+*   **Botões de Exportação:** Exibem `SnackBar` placeholder.
 *   **Voltar (AppBar):** Retorna à tela anterior (Home ou Profile).
 
 ---
 
-#### 🧩 Navegação
-*   Acessível a partir da **Home Screen** (botão no menu rápido ou Card de Lucro com opção "Ver Histórico").
-*   Acessível a partir da **Profile Screen** (botão "Histórico" próximo às estatísticas de vida).
+#### 🧩 Navegação (Etapa A)
+*   Acessível a partir da **Home Screen** (botão no menu rápido ou via Card de Lucro).
+*   Acessível a partir da **Profile Screen** (botão "Histórico").
 *   Rota sugerida: `/history` no `app_router.dart`.
+
+---
+
+## 📅 FASE 7 — ETAPA B: Substituição por Dados Reais (Supabase)
+
+### [ ] 7.B.1. History Screen — Integração com Backend Real
+
+#### 🎯 Objetivo
+Substituir **todos os dados mockup** da Etapa A por dados reais vindos do Supabase, implementando as funções de busca via RPCs, ativando as exportações reais e garantindo que a tela se comporte de forma dinâmica e responsiva.
+
+---
+
+#### 🔧 Funções a Implementar
+
+*   `_loadAvailableYears()`:
+    *   Substitui a lista mockup `[2023, 2024, 2025]` por uma query real:
+        ```sql
+        SELECT DISTINCT EXTRACT(YEAR FROM date)::int AS year
+        FROM earnings WHERE driver_id = auth.uid()
+        UNION
+        SELECT DISTINCT EXTRACT(YEAR FROM date)::int AS year
+        FROM expenses WHERE driver_id = auth.uid()
+        ORDER BY year DESC;
+        ```
+    *   Popular o seletor de Ano com os anos reais retornados.
+
+*   `_loadHistorySummary(year, month?)`:
+    *   Chama as RPCs `get_earnings_summary(driver_id, year, month)` e `get_expenses_summary(driver_id, year, month)`.
+    *   Parâmetro `month` opcional: se `null`, retorna o consolidado anual.
+    *   Substitui os valores mockup nos Cards de Resumo.
+    *   Calcula `Lucro = ganhos - gastos` no front.
+    *   Calcula a variação `%` em relação ao período anterior chamando a mesma RPC com `year/month - 1`.
+
+*   `_loadMonthlyBreakdown(year)`:
+    *   Chama a RPC `get_monthly_breakdown(driver_id, year)`.
+    *   Retorna array com resumo por mês → substitui a lista mockup de 12 meses na visão anual.
+    *   Estrutura esperada: `[{ month: 1, earnings: X, expenses: Y, profit: Z }, ...]`.
+
+*   `_loadWeeklyBreakdown(year, month)`:
+    *   Chama a RPC `get_weekly_breakdown(driver_id, year, month)`.
+    *   Retorna array com resumo por semana → substitui o breakdown mockup na visão mensal.
+    *   Estrutura esperada: `[{ week: 1, earnings: X, expenses: Y, profit: Z }, ...]`.
+
+*   `_loadRecentTransactions(year, month)`:
+    *   Busca os últimos 5 registros reais (Ganhos + Gastos) do período selecionado.
+    *   Exibidos na lista de transações recentes da visão mensal.
+
+---
+
+#### 💾 Fontes de Dados Reais (Supabase)
+
+| Dado | Fonte |
+|------|-------|
+| Anos disponíveis | Query SQL com `DISTINCT EXTRACT(YEAR FROM date)` |
+| Totais por período | RPCs `get_earnings_summary` e `get_expenses_summary` |
+| Breakdown mensal | RPC `get_monthly_breakdown(driver_id, year)` |
+| Breakdown semanal | RPC `get_weekly_breakdown(driver_id, year, month)` |
+| Transações recentes | Query direta em `earnings` + `expenses` com filtro de período |
+| Variação (%) | Comparação entre período atual e anterior via mesmas RPCs |
+
+> **RPCs a criar no Supabase (se não existirem):**
+> - `get_earnings_summary(p_driver_id, p_year, p_month?)` → `{ total: double }`
+> - `get_expenses_summary(p_driver_id, p_year, p_month?)` → `{ total: double }`
+> - `get_monthly_breakdown(p_driver_id, p_year)` → `[{ month, earnings, expenses, profit }]`
+> - `get_weekly_breakdown(p_driver_id, p_year, p_month)` → `[{ week, earnings, expenses, profit }]`
+
+---
+
+#### 📤 Exportação Real
+
+**Exportar como PDF:**
+*   Substituir o `SnackBar` placeholder por geração real do PDF usando `pdf` + `printing`.
+*   Conteúdo do PDF:
+    *   Cabeçalho: Nome do Motorista, Período (Mês/Ano ou Ano).
+    *   Cards de resumo (Ganhos, Gastos, Lucro reais).
+    *   Tabela com todas as transações reais do período (Data, Tipo, Valor, Descrição/Plataforma).
+    *   Rodapé: Data de geração do relatório.
+*   Abrir visualizador nativo ou compartilhar via `printing`.
+
+**Exportar como Excel (.xlsx):**
+*   Substituir o `SnackBar` placeholder por geração real do `.xlsx` usando `syncfusion_flutter_xlsio` ou `excel`.
+*   Abas:
+    *   **"Resumo":** Cards reais (Ganhos, Gastos, Lucro, Variação).
+    *   **"Ganhos":** Todas as linhas reais (Date, Platform, Hours, Trips, Value).
+    *   **"Gastos":** Todas as linhas reais (Date, Category, Description, Value).
+*   Salvar nos Downloads e exibir `SnackBar` com opção "Abrir".
+
+**Compartilhar:**
+*   Usar `share_plus` para enviar o arquivo gerado (PDF ou Excel) via apps instalados.
+
+---
+
+#### 🎬 Ações de Botões (Etapa B)
+*   **Setas de Ano (← →):** Recarrega anos reais e atualiza todos os dados dinamicamente.
+*   **Chip de Mês:** Dispara `_loadHistorySummary` e `_loadWeeklyBreakdown` com os dados reais.
+*   **"Ver Tudo" / Limpar Mês:** Dispara `_loadMonthlyBreakdown` real para a visão anual.
+*   **Item de Mês (visão anual):** Tap carrega o breakdown real daquele mês.
+*   **Botão "Exportar PDF":** Gera e abre/compartilha o PDF com dados reais do período.
+*   **Botão "Exportar Excel":** Gera e salva o `.xlsx` com dados reais do período.
+*   **Botão "Compartilhar":** Compartilha o arquivo real gerado.
+*   **Voltar (AppBar):** Retorna à tela anterior (Home ou Profile).
+
+---
+
+#### 🧩 Navegação (Etapa B — sem mudanças)
+*   Acessível a partir da **Home Screen**.
+*   Acessível a partir da **Profile Screen**.
+*   Rota: `/history` no `app_router.dart`.
 
 ---
 
