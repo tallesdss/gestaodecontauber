@@ -292,7 +292,7 @@ Três cards em destaque exibindo o panorama do período selecionado:
 
 ## 📅 FASE 7 — ETAPA B: Substituição por Dados Reais (Supabase)
 
-### [ ] 7.B.1. History Screen — Integração com Backend Real
+### [x] 7.B.1. History Screen — Integração com Backend Real
 
 #### 🎯 Objetivo
 Substituir **todos os dados mockup** da Etapa A por dados reais vindos do Supabase, implementando as funções de busca via RPCs, ativando as exportações reais e garantindo que a tela se comporte de forma dinâmica e responsiva.

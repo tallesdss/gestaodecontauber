@@ -4,88 +4,16 @@ import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/supabase/supabase_service.dart';
+import '../../core/utils/export_utils.dart';
 
 // ─────────────────────────────────────────────
-//  MOCKUP DATA
+//  CONSTANTS
 // ─────────────────────────────────────────────
-class _MockData {
-  /// Anos disponíveis (mockup)
-  static const List<int> years = [2023, 2024, 2025];
-
-  static const List<String> monthNames = [
-    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
-  ];
-
-  /// Dados por ano → mês (1-based) → {earnings, expenses}
-  static const Map<int, Map<int, Map<String, double>>> monthly = {
-    2025: {
-      1:  {'earnings': 3100, 'expenses':  820},
-      2:  {'earnings': 2850, 'expenses':  760},
-      3:  {'earnings': 3400, 'expenses':  900},
-      4:  {'earnings': 3250, 'expenses':  980},
-      5:  {'earnings': 3600, 'expenses': 1050},
-      6:  {'earnings': 3120, 'expenses':  870},
-      7:  {'earnings': 2900, 'expenses':  800},
-      8:  {'earnings': 3300, 'expenses':  950},
-      9:  {'earnings': 3450, 'expenses': 1000},
-      10: {'earnings': 3700, 'expenses': 1100},
-      11: {'earnings': 3550, 'expenses': 1020},
-      12: {'earnings': 4000, 'expenses': 1200},
-    },
-    2024: {
-      1:  {'earnings': 2800, 'expenses':  700},
-      2:  {'earnings': 2600, 'expenses':  680},
-      3:  {'earnings': 3000, 'expenses':  800},
-      4:  {'earnings': 2900, 'expenses':  780},
-      5:  {'earnings': 3200, 'expenses':  900},
-      6:  {'earnings': 2850, 'expenses':  750},
-      7:  {'earnings': 2700, 'expenses':  720},
-      8:  {'earnings': 3100, 'expenses':  860},
-      9:  {'earnings': 3250, 'expenses':  890},
-      10: {'earnings': 3400, 'expenses':  950},
-      11: {'earnings': 3300, 'expenses':  920},
-      12: {'earnings': 3800, 'expenses': 1100},
-    },
-    2023: {
-      1:  {'earnings': 2200, 'expenses':  600},
-      2:  {'earnings': 2000, 'expenses':  550},
-      3:  {'earnings': 2400, 'expenses':  640},
-      4:  {'earnings': 2300, 'expenses':  620},
-      5:  {'earnings': 2600, 'expenses':  700},
-      6:  {'earnings': 2200, 'expenses':  580},
-      7:  {'earnings': 2100, 'expenses':  560},
-      8:  {'earnings': 2500, 'expenses':  660},
-      9:  {'earnings': 2650, 'expenses':  700},
-      10: {'earnings': 2800, 'expenses':  750},
-      11: {'earnings': 2700, 'expenses':  720},
-      12: {'earnings': 3100, 'expenses':  900},
-    },
-  };
-
-  /// Breakdown semanal mockup para qualquer mês selecionado
-  static List<Map<String, dynamic>> weeklyBreakdown(double earnings, double expenses) {
-    // Distribui os valores do mês em 4 semanas proporcionalmente (mockup)
-    return [
-      {'week': 1, 'earnings': earnings * 0.22, 'expenses': expenses * 0.20},
-      {'week': 2, 'earnings': earnings * 0.26, 'expenses': expenses * 0.28},
-      {'week': 3, 'earnings': earnings * 0.28, 'expenses': expenses * 0.27},
-      {'week': 4, 'earnings': earnings * 0.24, 'expenses': expenses * 0.25},
-    ];
-  }
-
-  /// Transações recentes mockup para visão mensal
-  static List<Map<String, dynamic>> recentTransactions(int month) {
-    final mName = monthNames[month - 1];
-    return [
-      {'date': '15 $mName', 'type': 'earning', 'desc': 'Uber — Turno da tarde', 'value': 180.0},
-      {'date': '14 $mName', 'type': 'expense', 'desc': 'Combustível — Posto Shell', 'value': -95.0},
-      {'date': '12 $mName', 'type': 'earning', 'desc': '99 — Turno da manhã',  'value': 210.0},
-      {'date': '10 $mName', 'type': 'expense', 'desc': 'Manutenção — Troca de óleo', 'value': -150.0},
-      {'date': '08 $mName', 'type': 'earning', 'desc': 'Uber — Turno noturno',  'value': 240.0},
-    ];
-  }
-}
+const List<String> _kMonthNames = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+];
 
 // ─────────────────────────────────────────────
 //  SCREEN
@@ -99,17 +27,33 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
+  // ── state ──────────────────────────────────
+  List<int> _availableYears = [];
   int _selectedYear = DateTime.now().year;
   int? _selectedMonth; // null = visão anual
-  bool _isLoading = false;
 
-  late AnimationController _animController;
-  late Animation<double> _fadeAnim;
+  bool _isLoadingYears = true;
+  bool _isLoadingData  = true;
+  String? _error;
 
-  // dados calculados
+  // dados do período atual
   double _earnings = 0;
   double _expenses = 0;
-  double _profit = 0;
+  double _profit   = 0;
+
+  // dados do período anterior (para calcular variação %)
+  double _prevEarnings = 0;
+  double _prevExpenses = 0;
+  double _prevProfit   = 0;
+
+  // breakdown lists
+  List<Map<String, dynamic>> _monthlyData  = [];
+  List<Map<String, dynamic>> _weeklyData   = [];
+  List<Map<String, dynamic>> _transactions = [];
+
+  // animation
+  late AnimationController _animController;
+  late Animation<double>    _fadeAnim;
 
   @override
   void initState() {
@@ -120,7 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeIn);
     _selectedMonth = DateTime.now().month;
-    _refreshData();
+    _init();
   }
 
   @override
@@ -129,52 +73,125 @@ class _HistoryScreenState extends State<HistoryScreen>
     super.dispose();
   }
 
-  void _refreshData({bool showLoading = false}) {
-    if (showLoading) {
-      setState(() => _isLoading = true);
-    }
-    _animController.reset();
+  // ── initialise: years first, then data ─────
+  Future<void> _init() async {
+    await _loadAvailableYears();
+    await _loadData();
+  }
 
-    Future.delayed(const Duration(milliseconds: 300), () {
+  Future<void> _loadAvailableYears() async {
+    try {
+      final years = await SupabaseService.getAvailableYears();
       if (!mounted) return;
-      final yearData = _MockData.monthly[_selectedYear] ?? {};
-
-      double e = 0, x = 0;
-      if (_selectedMonth != null) {
-        final mData = yearData[_selectedMonth] ?? {'earnings': 0.0, 'expenses': 0.0};
-        e = mData['earnings']!;
-        x = mData['expenses']!;
-      } else {
-        // visão anual: soma todos os meses
-        for (final m in yearData.values) {
-          e += m['earnings']!;
-          x += m['expenses']!;
+      setState(() {
+        _availableYears = years.isEmpty ? [DateTime.now().year] : years;
+        // snap selection to a valid year
+        if (!_availableYears.contains(_selectedYear)) {
+          _selectedYear = _availableYears.first;
         }
+        _isLoadingYears = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _availableYears  = [DateTime.now().year];
+        _isLoadingYears  = false;
+      });
+    }
+  }
+
+  // ── load all data for current year/month ───
+  Future<void> _loadData({bool showLoading = false}) async {
+    if (!mounted) return;
+    if (showLoading) setState(() => _isLoadingData = true);
+    _animController.reset();
+    _error = null;
+
+    try {
+      // current period
+      final summary = await SupabaseService.getHistorySummary(
+        _selectedYear,
+        month: _selectedMonth,
+      );
+
+      // previous period (for trend %)
+      final Map<String, double> prevSummary;
+      if (_selectedMonth != null) {
+        // previous month (may cross year boundary)
+        final prevMonth = _selectedMonth! - 1;
+        if (prevMonth == 0) {
+          prevSummary = await SupabaseService.getHistorySummary(
+            _selectedYear - 1,
+            month: 12,
+          );
+        } else {
+          prevSummary = await SupabaseService.getHistorySummary(
+            _selectedYear,
+            month: prevMonth,
+          );
+        }
+      } else {
+        // previous year
+        prevSummary = await SupabaseService.getHistorySummary(_selectedYear - 1);
       }
 
+      // breakdown
+      List<Map<String, dynamic>> monthly  = [];
+      List<Map<String, dynamic>> weekly   = [];
+      List<Map<String, dynamic>> transactions = [];
+
+      if (_selectedMonth == null) {
+        monthly = await SupabaseService.getMonthlyBreakdown(_selectedYear);
+      } else {
+        weekly       = await SupabaseService.getWeeklyBreakdown(_selectedYear, _selectedMonth!);
+        transactions = await SupabaseService.getRecentTransactionsForHistory(
+          _selectedYear, _selectedMonth!,
+        );
+      }
+
+      if (!mounted) return;
       setState(() {
-        _earnings = e;
-        _expenses = x;
-        _profit = e - x;
-        _isLoading = false;
+        _earnings     = summary['totalEarnings']!;
+        _expenses     = summary['totalExpenses']!;
+        _profit       = _earnings - _expenses;
+        _prevEarnings = prevSummary['totalEarnings']!;
+        _prevExpenses = prevSummary['totalExpenses']!;
+        _prevProfit   = _prevEarnings - _prevExpenses;
+        _monthlyData  = monthly;
+        _weeklyData   = weekly;
+        _transactions = transactions;
+        _isLoadingData = false;
       });
       _animController.forward();
-    });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error         = 'Erro ao carregar dados. Tente novamente.';
+        _isLoadingData = false;
+      });
+    }
+  }
+
+  // ── helpers ────────────────────────────────
+  String _trendString(double current, double previous) {
+    if (previous == 0) {
+      return current > 0 ? '+100%' : '0%';
+    }
+    final pct = ((current - previous) / previous * 100).round();
+    return pct >= 0 ? '+$pct%' : '$pct%';
   }
 
   void _changeYear(int delta) {
-    final idx = _MockData.years.indexOf(_selectedYear);
-    final newIdx = idx - delta; // seta → avança (anos decrescentes na lista)
-    if (newIdx < 0 || newIdx >= _MockData.years.length) return;
-    setState(() {
-      _selectedYear = _MockData.years[newIdx];
-    });
-    _refreshData(showLoading: true);
+    final idx    = _availableYears.indexOf(_selectedYear);
+    final newIdx = idx - delta; // seta → percorre da posição mais recente
+    if (newIdx < 0 || newIdx >= _availableYears.length) return;
+    setState(() => _selectedYear = _availableYears[newIdx]);
+    _loadData(showLoading: true);
   }
 
   void _selectMonth(int? month) {
     setState(() => _selectedMonth = month);
-    _refreshData(showLoading: true);
+    _loadData(showLoading: true);
   }
 
   void _showSnackBar(String msg) {
@@ -204,44 +221,67 @@ class _HistoryScreenState extends State<HistoryScreen>
           child: Column(
             children: [
               _buildAppBar(context),
-              _buildYearSelector(),
-              _buildMonthChips(),
+              if (_isLoadingYears)
+                const LinearProgressIndicator(color: AppColors.primary, minHeight: 2)
+              else ...[
+                _buildYearSelector(),
+                _buildMonthChips(),
+              ],
               const SizedBox(height: AppSpacing.md),
               Expanded(
-                child: _isLoading
+                child: _isLoadingData
                     ? const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
+                        child: CircularProgressIndicator(color: AppColors.primary),
                       )
-                    : FadeTransition(
-                        opacity: _fadeAnim,
-                        child: RefreshIndicator(
-                          onRefresh: () async =>
-                              _refreshData(showLoading: true),
-                          child: SingleChildScrollView(
-                            padding: AppSpacing.paddingLG,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildSummaryCards(),
-                                const SizedBox(height: AppSpacing.xl),
-                                _selectedMonth == null
-                                    ? _buildAnnualBreakdown()
-                                    : _buildMonthlyBreakdown(),
-                                const SizedBox(height: AppSpacing.xl),
-                                _buildExportSection(),
-                                const SizedBox(height: AppSpacing.xxxl),
-                              ],
+                    : _error != null
+                        ? _buildErrorState()
+                        : FadeTransition(
+                            opacity: _fadeAnim,
+                            child: RefreshIndicator(
+                              onRefresh: () => _loadData(showLoading: true),
+                              child: SingleChildScrollView(
+                                padding: AppSpacing.paddingLG,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSummaryCards(),
+                                    const SizedBox(height: AppSpacing.xl),
+                                    _selectedMonth == null
+                                        ? _buildAnnualBreakdown()
+                                        : _buildMonthlyBreakdown(),
+                                    const SizedBox(height: AppSpacing.xl),
+                                    _buildExportSection(),
+                                    const SizedBox(height: AppSpacing.xxxl),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ─── ERROR STATE ─────────────────────────────
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off, color: AppColors.textTertiary, size: 48),
+          const SizedBox(height: AppSpacing.md),
+          Text(_error!, style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: () => _loadData(showLoading: true),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Tentar novamente'),
+          ),
+        ],
       ),
     );
   }
@@ -272,10 +312,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
-            child: Text(
-              'Histórico Financeiro',
-              style: AppTypography.h4,
-            ),
+            child: Text('Histórico Financeiro', style: AppTypography.h4),
           ),
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
@@ -283,11 +320,7 @@ class _HistoryScreenState extends State<HistoryScreen>
               color: AppColors.primary.withAlpha(30),
               borderRadius: AppRadius.borderRadiusMD,
             ),
-            child: const Icon(
-              Icons.history,
-              color: AppColors.primary,
-              size: 22,
-            ),
+            child: const Icon(Icons.history, color: AppColors.primary, size: 22),
           ),
         ],
       ),
@@ -296,9 +329,9 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   // ─── YEAR SELECTOR ───────────────────────────
   Widget _buildYearSelector() {
-    final idx = _MockData.years.indexOf(_selectedYear);
-    final canGoBack = idx < _MockData.years.length - 1;
-    final canGoForward = idx > 0;
+    final idx        = _availableYears.indexOf(_selectedYear);
+    final canGoBack  = idx < _availableYears.length - 1; // mais antigo
+    final canGoForward = idx > 0;                         // mais recente
 
     return Padding(
       padding: AppSpacing.horizontalLG,
@@ -310,9 +343,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         decoration: BoxDecoration(
           color: AppColors.surface.withAlpha(180),
           borderRadius: AppRadius.borderRadiusXL,
-          border: Border.all(
-            color: AppColors.primary.withAlpha(50),
-          ),
+          border: Border.all(color: AppColors.primary.withAlpha(50)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -353,21 +384,19 @@ class _HistoryScreenState extends State<HistoryScreen>
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: AppSpacing.horizontalLG,
-          itemCount: _MockData.monthNames.length + 1, // +1 = "Tudo"
+          itemCount: _kMonthNames.length + 1, // +1 = "Tudo"
           itemBuilder: (ctx, i) {
             if (i == 0) {
-              final sel = _selectedMonth == null;
               return _MonthChip(
                 label: 'Tudo',
-                selected: sel,
+                selected: _selectedMonth == null,
                 onTap: () => _selectMonth(null),
               );
             }
             final month = i; // 1-based
-            final sel = _selectedMonth == month;
             return _MonthChip(
-              label: _MockData.monthNames[i - 1],
-              selected: sel,
+              label: _kMonthNames[i - 1],
+              selected: _selectedMonth == month,
               onTap: () => _selectMonth(month),
             );
           },
@@ -378,6 +407,10 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   // ─── SUMMARY CARDS ───────────────────────────
   Widget _buildSummaryCards() {
+    final earnTrend  = _trendString(_earnings, _prevEarnings);
+    final expTrend   = _trendString(_expenses, _prevExpenses);
+    final profTrend  = _trendString(_profit,   _prevProfit);
+
     return Row(
       children: [
         _SummaryCard(
@@ -385,7 +418,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           value: _earnings,
           color: AppColors.earnings,
           icon: Icons.trending_up,
-          trend: '+12%',
+          trend: earnTrend,
         ),
         const SizedBox(width: AppSpacing.sm),
         _SummaryCard(
@@ -393,7 +426,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           value: _expenses,
           color: AppColors.secondary,
           icon: Icons.trending_down,
-          trend: '+5%',
+          trend: expTrend,
         ),
         const SizedBox(width: AppSpacing.sm),
         _SummaryCard(
@@ -401,7 +434,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           value: _profit,
           color: AppColors.accent,
           icon: Icons.account_balance_wallet,
-          trend: '+18%',
+          trend: profTrend,
         ),
       ],
     );
@@ -409,34 +442,31 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   // ─── ANNUAL BREAKDOWN ────────────────────────
   Widget _buildAnnualBreakdown() {
-    final yearData = _MockData.monthly[_selectedYear] ?? {};
-    // Calcula o maior lucro do ano para normalizar as mini-barras
-    double maxProfit = 1;
-    for (final m in yearData.values) {
-      final p = m['earnings']! - m['expenses']!;
-      if (p > maxProfit) maxProfit = p;
+    if (_monthlyData.isEmpty) {
+      return _buildEmptyState('Sem registros para $_selectedYear.');
     }
+
+    final maxProfit = _monthlyData.fold<double>(
+      1,
+      (prev, m) => m['profit'] as double > prev ? m['profit'] as double : prev,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Resumo por Mês', style: AppTypography.h4),
         const SizedBox(height: AppSpacing.lg),
-        ...List.generate(12, (i) {
-          final month = i + 1;
-          final mData = yearData[month] ?? {'earnings': 0.0, 'expenses': 0.0};
-          final e = mData['earnings']!;
-          final x = mData['expenses']!;
-          final p = e - x;
+        ..._monthlyData.map((m) {
+          final month = m['month'] as int;
           return _AnnualMonthItem(
-            month: month,
-            monthName: _MockData.monthNames[i],
-            year: _selectedYear,
-            earnings: e,
-            expenses: x,
-            profit: p,
+            month:     month,
+            monthName: _kMonthNames[month - 1],
+            year:      _selectedYear,
+            earnings:  m['earnings'] as double,
+            expenses:  m['expenses'] as double,
+            profit:    m['profit']   as double,
             maxProfit: maxProfit,
-            onTap: () => _selectMonth(month),
+            onTap:    () => _selectMonth(month),
           );
         }),
       ],
@@ -445,31 +475,100 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   // ─── MONTHLY BREAKDOWN ───────────────────────
   Widget _buildMonthlyBreakdown() {
-    final yearData = _MockData.monthly[_selectedYear] ?? {};
-    final mData = yearData[_selectedMonth] ?? {'earnings': 0.0, 'expenses': 0.0};
-    final e = mData['earnings']!;
-    final x = mData['expenses']!;
-    final weeks = _MockData.weeklyBreakdown(e, x);
-    final transactions = _MockData.recentTransactions(_selectedMonth!);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Seção semanal
         Text('Breakdown Semanal', style: AppTypography.h4),
         const SizedBox(height: AppSpacing.lg),
-        ...weeks.map((w) => _WeekItem(data: w)),
+        if (_weeklyData.isEmpty)
+          _buildEmptyState('Sem dados semanais para este mês.')
+        else
+          ..._weeklyData.map((w) => _WeekItem(data: w)),
         const SizedBox(height: AppSpacing.xl),
 
         // Transações recentes
         Text('Transações Recentes', style: AppTypography.h4),
         const SizedBox(height: AppSpacing.lg),
-        ...transactions.map((t) => _TransactionItem(data: t)),
+        if (_transactions.isEmpty)
+          _buildEmptyState('Sem transações neste mês.')
+        else
+          ..._transactions.map((t) => _TransactionItem(data: t)),
       ],
     );
   }
 
-  // ─── EXPORT SECTION ──────────────────────────
+  // ─── EMPTY STATE ─────────────────────────────
+  Widget _buildEmptyState(String msg) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Center(
+        child: Text(
+          msg,
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.textTertiary),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  // ─── EXPORTAÇÃO REAL ─────────────────────────────
+  Future<void> _exportData(String format) async {
+    setState(() => _isLoadingData = true);
+    try {
+      final driver = await SupabaseService.getDriver();
+      final driverName = driver?.name ?? 'Motorista';
+      
+      final periodName = _selectedMonth == null 
+        ? 'Ano $_selectedYear'
+        : '${_kMonthNames[_selectedMonth! - 1]} $_selectedYear';
+
+      final start = _selectedMonth == null 
+        ? DateTime(_selectedYear, 1, 1) 
+        : DateTime(_selectedYear, _selectedMonth!, 1);
+      final end = _selectedMonth == null 
+        ? DateTime(_selectedYear, 12, 31) 
+        : DateTime(_selectedYear, _selectedMonth! + 1, 0);
+
+      final earningsList = await SupabaseService.getEarnings(
+        start: start, end: end, to: 9999,
+      );
+      final expensesList = await SupabaseService.getExpenses(
+        start: start, end: end, to: 9999,
+      );
+
+      if (!mounted) return;
+
+      if (format == 'pdf' || format == 'share') {
+        await ExportUtils.exportPdf(
+          context: context,
+          driverName: driverName,
+          periodName: periodName,
+          earnings: _earnings,
+          expenses: _expenses,
+          profit: _profit,
+          allEarnings: earningsList,
+          allExpenses: expensesList,
+        );
+      } else if (format == 'excel') {
+        await ExportUtils.exportExcel(
+          context: context,
+          driverName: driverName,
+          periodName: periodName,
+          earnings: _earnings,
+          expenses: _expenses,
+          profit: _profit,
+          allEarnings: earningsList,
+          allExpenses: expensesList,
+        );
+      }
+    } catch (e) {
+      if (mounted) _showSnackBar('Erro ao exportar: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingData = false);
+    }
+  }
+
   Widget _buildExportSection() {
     return Container(
       decoration: BoxDecoration(
@@ -496,7 +595,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   icon: Icons.picture_as_pdf,
                   label: 'PDF',
                   color: const Color(0xFFEF4444),
-                  onTap: () => _showSnackBar('Funcionalidade em breve'),
+                  onTap: () => _exportData('pdf'),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -505,7 +604,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   icon: Icons.table_chart,
                   label: 'Excel',
                   color: const Color(0xFF22C55E),
-                  onTap: () => _showSnackBar('Funcionalidade em breve'),
+                  onTap: () => _exportData('excel'),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -514,7 +613,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   icon: Icons.share,
                   label: 'Compartilhar',
                   color: AppColors.accent,
-                  onTap: () => _showSnackBar('Funcionalidade em breve'),
+                  onTap: () => _exportData('share'),
                 ),
               ),
             ],
@@ -632,10 +731,7 @@ class _SummaryCard extends StatelessWidget {
               children: [
                 Icon(icon, color: color, size: 18),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
                     color: color.withAlpha(40),
                     borderRadius: AppRadius.borderRadiusRound,
@@ -794,9 +890,9 @@ class _WeekItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final week = data['week'] as int;
-    final e = data['earnings'] as double;
-    final x = data['expenses'] as double;
-    final p = e - x;
+    final e    = data['earnings'] as double;
+    final x    = data['expenses'] as double;
+    final p    = data['profit']   as double;  // already computed by RPC
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -861,9 +957,15 @@ class _TransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEarning = data['type'] == 'earning';
-    final color = isEarning ? AppColors.earnings : AppColors.secondary;
-    final icon = isEarning ? Icons.arrow_upward : Icons.arrow_downward;
-    final value = data['value'] as double;
+    final color     = isEarning ? AppColors.earnings : AppColors.secondary;
+    final icon      = isEarning ? Icons.arrow_upward : Icons.arrow_downward;
+    final value     = data['value'] as double;
+    final date      = data['date'] as DateTime;
+
+    // Format date as "dd Mmm"
+    final day     = date.day.toString().padLeft(2, '0');
+    final monthNm = _kMonthNames[date.month - 1];
+    final dateStr = '$day $monthNm';
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -895,15 +997,12 @@ class _TransactionItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  data['date'] as String,
-                  style: AppTypography.caption,
-                ),
+                Text(dateStr, style: AppTypography.caption),
               ],
             ),
           ),
           Text(
-            '${value >= 0 ? '+' : ''}${CurrencyFormatter.format(value.abs())}',
+            '${isEarning ? '+' : '-'}${CurrencyFormatter.format(value)}',
             style: AppTypography.labelMedium.copyWith(color: color, fontSize: 13),
           ),
         ],

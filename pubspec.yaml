@@ -51,6 +51,7 @@ dependencies:
   # Backend Supabase (§ 1 backend.md)
   supabase_flutter: ^2.8.0
   flutter_dotenv: ^5.2.1
+  printing: ^5.14.2
 
 dev_dependencies:
   flutter_test:

@@ -375,6 +375,136 @@ class SupabaseService {
   }
 
   // ---------------------------------------------------------------------------
+  // History (Fase 7 Etapa B)
+  // ---------------------------------------------------------------------------
+
+  /// Retorna os anos distintos em que o motorista possui registros.
+  static Future<List<int>> getAvailableYears() async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await supabaseClient.rpc('get_available_years');
+
+    if (response is List) {
+      return response.map((row) => (row['year'] as num).toInt()).toList();
+    }
+    return [];
+  }
+
+  /// Retorna totais de ganhos e gastos para o período informado.
+  /// Se [month] for null, consolida o ano inteiro.
+  static Future<Map<String, double>> getHistorySummary(
+      int year, {int? month}) async {
+    final params = <String, dynamic>{'p_year': year};
+    if (month != null) params['p_month'] = month;
+
+    final response = await supabaseClient.rpc('get_history_summary', params: params);
+
+    if (response is List && response.isNotEmpty) {
+      final data = response.first;
+      return {
+        'totalEarnings': (data['total_earnings'] as num?)?.toDouble() ?? 0.0,
+        'totalExpenses': (data['total_expenses'] as num?)?.toDouble() ?? 0.0,
+      };
+    }
+    return {'totalEarnings': 0.0, 'totalExpenses': 0.0};
+  }
+
+  /// Retorna o breakdown mensal (ganhos, gastos, lucro por mês) de um dado ano.
+  static Future<List<Map<String, dynamic>>> getMonthlyBreakdown(int year) async {
+    final response = await supabaseClient.rpc(
+      'get_monthly_breakdown',
+      params: {'p_year': year},
+    );
+
+    if (response is List) {
+      return response.map((row) => {
+        'month':    (row['month']    as num).toInt(),
+        'earnings': (row['earnings'] as num?)?.toDouble() ?? 0.0,
+        'expenses': (row['expenses'] as num?)?.toDouble() ?? 0.0,
+        'profit':   (row['profit']   as num?)?.toDouble() ?? 0.0,
+      }).toList();
+    }
+    return [];
+  }
+
+  /// Retorna o breakdown semanal (ganhos, gastos, lucro por semana) de um dado mês/ano.
+  static Future<List<Map<String, dynamic>>> getWeeklyBreakdown(
+      int year, int month) async {
+    final response = await supabaseClient.rpc(
+      'get_weekly_breakdown',
+      params: {'p_year': year, 'p_month': month},
+    );
+
+    if (response is List) {
+      return response.map((row) => {
+        'week':     (row['week']     as num).toInt(),
+        'earnings': (row['earnings'] as num?)?.toDouble() ?? 0.0,
+        'expenses': (row['expenses'] as num?)?.toDouble() ?? 0.0,
+        'profit':   (row['profit']   as num?)?.toDouble() ?? 0.0,
+      }).toList();
+    }
+    return [];
+  }
+
+  /// Busca as transações recentes (ganhos + gastos) de um dado período.
+  /// Retorna uma lista mesclada ordenada por data decrescente (limite 10).
+  static Future<List<Map<String, dynamic>>> getRecentTransactionsForHistory(
+      int year, int month) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final start = SupabaseFieldMapping.toSupabaseDate(DateTime(year, month, 1));
+    final end   = SupabaseFieldMapping.toSupabaseDate(
+      DateTime(year, month + 1, 0), // último dia do mês
+    );
+
+    final earningsResp = await supabaseClient
+        .from('earnings')
+        .select('id, date, value, platform')
+        .eq('user_id', userId)
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', ascending: false)
+        .limit(10);
+
+    final expensesResp = await supabaseClient
+        .from('expenses')
+        .select('id, date, value, description, category')
+        .eq('user_id', userId)
+        .gte('date', start)
+        .lte('date', end)
+        .order('date', ascending: false)
+        .limit(10);
+
+    final List<Map<String, dynamic>> merged = [];
+
+    for (final row in (earningsResp as List)) {
+      final date = DateTime.parse(row['date'] as String);
+      merged.add({
+        'type':  'earning',
+        'date':  date,
+        'value': (row['value'] as num).toDouble(),
+        'desc':  row['platform'] as String? ?? 'Ganho',
+      });
+    }
+    for (final row in (expensesResp as List)) {
+      final date = DateTime.parse(row['date'] as String);
+      merged.add({
+        'type':  'expense',
+        'date':  date,
+        'value': (row['value'] as num).toDouble(),
+        'desc':  row['description'] as String? ??
+                 row['category']    as String? ?? 'Despesa',
+      });
+    }
+
+    // Ordena por data decrescente e limita a 10
+    merged.sort((a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime));
+    return merged.take(10).toList();
+  }
+
+  // ---------------------------------------------------------------------------
   // Notifications
   // ---------------------------------------------------------------------------
 
