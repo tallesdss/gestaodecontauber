@@ -402,7 +402,7 @@ Criar um `SupabaseService` com métodos por entidade:
 ## 11. Melhorias Futuras (Opcional)
 
 - **Realtime:** subscriptions do Supabase para atualizar listas em tempo real em múltiplos dispositivos.
-- **Offline:** estratégia de cache local e sincronização ao voltar online (ex.: persistência local + fila de escritas).
+-
 - **Categorias de despesas:** tabela dedicada com FK em `expenses` para relatórios e filtros mais consistentes.
 - **Edge Functions:** lógica de negócio mais complexa (ex.: notificações de meta atingida) via Supabase Edge Functions.
 - **Relatórios avançados:** views materializadas ou RPCs adicionais para gráficos de evolução mensal, top categorias de gastos e comparativos entre períodos.
